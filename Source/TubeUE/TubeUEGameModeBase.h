@@ -10,8 +10,6 @@
  * 
  */
 UCLASS()
-class TUBEUE_API ATubeUEGameModeBase : public AGameModeBase
-{
+class TUBEUE_API ATubeUEGameModeBase : public AGameModeBase{
 	GENERATED_BODY()
-	
 };
