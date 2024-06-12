@@ -3,18 +3,24 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
-#include "PID.generated.h"
+#include "Components/SceneComponent.h"
+#include "ForceComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class TUBEUE_API UPID : public UActorComponent
+class TUBEUE_API UForceComponent : public USceneComponent
 {
 	GENERATED_BODY()
+private:
+	UPROPERTY()
+	UStaticMeshComponent *meshComp;
+
+	UPROPERTY(EditAnywhere, Category = "Force")
+	float force = 1.0f;
 
 public:	
 	// Sets default values for this component's properties
-	UPID();
+	UForceComponent();
 
 protected:
 	// Called when the game starts
@@ -23,4 +29,6 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+		
 };
