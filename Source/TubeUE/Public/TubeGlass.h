@@ -4,24 +4,21 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Ball.generated.h"
+#include "TubeGlass.generated.h"
 
-UCLASS(BlueprintType, Blueprintable)
-class TUBEUE_API ABall : public AActor{
-
+UCLASS()
+class TUBEUE_API ATubeGlass : public AActor{
+	
 	GENERATED_BODY()
 	private:
 		UPROPERTY(EditAnywhere)
-		class UStaticMeshComponent *ballMesh;
+		class UStaticMeshComponent* tubeGlassMesh;
 	protected:
 		// Called when the game starts or when spawned
 		virtual void BeginPlay() override;
-	public:	
+	public:
 		// Sets default values for this actor's properties
-		ABall();
-
-		UPROPERTY(EditAnywhere, Category = "TestValue") 
-		int value;
+		ATubeGlass();
 		// Called every frame
 		virtual void Tick(float DeltaTime) override;
 };

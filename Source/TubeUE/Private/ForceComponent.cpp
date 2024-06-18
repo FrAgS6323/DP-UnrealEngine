@@ -4,8 +4,7 @@
 #include "ForceComponent.h"
 
 // Sets default values for this component's properties
-UForceComponent::UForceComponent()
-{
+UForceComponent::UForceComponent(){
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
@@ -13,8 +12,7 @@ UForceComponent::UForceComponent()
 
 
 // Called when the game starts
-void UForceComponent::BeginPlay()
-{
+void UForceComponent::BeginPlay(){
 	Super::BeginPlay();
 
 	this->meshComp = Cast<UStaticMeshComponent>(GetOwner()->GetRootComponent());
@@ -23,8 +21,7 @@ void UForceComponent::BeginPlay()
 
 
 // Called every frame
-void UForceComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
+void UForceComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction){
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	const FVector forceDirUp = this->GetUpVector();
 

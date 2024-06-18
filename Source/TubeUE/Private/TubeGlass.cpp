@@ -1,28 +1,23 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Ball.h"
+#include "TubeGlass.h"
 
 // Sets default values
-ABall::ABall(){
+ATubeGlass::ATubeGlass(){
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	this->value = 100;
-	this->ballMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BallMesh"));
-	RootComponent = this->ballMesh;
-
-	this->ballMesh->SetSimulatePhysics(true);
-	this->ballMesh->SetEnableGravity(true);
+	this->tubeGlassMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TubeGlassMesh"));
+	RootComponent = this->tubeGlassMesh;
 }
 
 // Called when the game starts or when spawned
-void ABall::BeginPlay(){
+void ATubeGlass::BeginPlay(){
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
-void ABall::Tick(float DeltaTime){
+void ATubeGlass::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
 }
 
