@@ -23,10 +23,8 @@ class TUBEUE_API URotateTube : public UActorComponent{
 	public:	
 		// Sets default values for this component's properties
 		URotateTube();
-		UPROPERTY(EditAnywhere, Category = "Angle")
-		float angle = 0.0f;
-		UPROPERTY(EditAnywhere, Category = "RotationVelocity")
-		float rotationVel = 0.0f;
+		UPROPERTY(EditAnywhere, Category = "Angle") float angle = 0.0f;
+		UPROPERTY(EditAnywhere, Category = "RotationVelocity") float rotationVel = 0.0f;
 		//void rotate(float angleDeg);
 		virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 };

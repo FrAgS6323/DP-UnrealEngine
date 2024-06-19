@@ -10,7 +10,6 @@ ATubeGlass::ATubeGlass(){
 	this->tubeGlassMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TubeGlassMesh"));
 	RootComponent = this->tubeGlassMesh;
 	this->rotateTubeComponent = CreateDefaultSubobject<URotateTube>(TEXT("RotateTubeComponent"));
-
 	this->tubeGlassMesh->SetSimulatePhysics(true);
 }
 
@@ -22,4 +21,5 @@ void ATubeGlass::BeginPlay(){
 // Called every frame
 void ATubeGlass::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
+	//UE_LOG(LogTemp, Warning, TEXT("InitHeight: = %f"), this->GetActorLocation().Z + this->motorHeight);
 }

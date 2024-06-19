@@ -8,15 +8,13 @@ UCLASS()
 class TUBEUE_API ATubeGlass : public AActor{
 	GENERATED_BODY()
 	private:
-		UPROPERTY(EditAnywhere)
-		class UStaticMeshComponent* tubeGlassMesh;
+		double motorHeight = 0.07f;
+		UPROPERTY(EditAnywhere) class UStaticMeshComponent* tubeGlassMesh;
 	protected:
 		virtual void BeginPlay() override;
 	public:
 		ATubeGlass();
-		UPROPERTY(EditAnywhere)
-		float angle;
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-		URotateTube* rotateTubeComponent;
+		UPROPERTY(EditAnywhere) float angle;
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components") URotateTube* rotateTubeComponent;
 		virtual void Tick(float DeltaTime) override;
 };
