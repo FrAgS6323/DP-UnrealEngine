@@ -7,10 +7,10 @@
 ABall::ABall(){
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	this->value = 100;
 	this->ballMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BallMesh"));
 	RootComponent = this->ballMesh;
 
+	this->forceComponent = CreateDefaultSubobject<UForceComponent>(TEXT("ForceComponent"));
 	this->ballMesh->SetSimulatePhysics(true);
 	this->ballMesh->SetEnableGravity(true);
 }
@@ -22,7 +22,9 @@ void ABall::BeginPlay(){
 }
 
 // Called every frame
-void ABall::Tick(float DeltaTime){
+void ABall::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
+	UE_LOG(LogTemp, Warning, TEXT("BallPos x: %f"), this->GetActorLocation().X);
+	UE_LOG(LogTemp, Warning, TEXT("BallPos y: %f"), this->GetActorLocation().Y);
+	UE_LOG(LogTemp, Warning, TEXT("BallPos z: %f"), this->GetActorLocation().Z);
 }
-

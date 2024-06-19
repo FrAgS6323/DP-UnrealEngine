@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "ForceComponent.h"
 #include "Ball.generated.h"
 
 UCLASS(BlueprintType, Blueprintable)
 class TUBEUE_API ABall : public AActor{
-
 	GENERATED_BODY()
 	private:
 		UPROPERTY(EditAnywhere)
@@ -19,9 +19,8 @@ class TUBEUE_API ABall : public AActor{
 	public:	
 		// Sets default values for this actor's properties
 		ABall();
-
-		UPROPERTY(EditAnywhere, Category = "TestValue") 
-		int value;
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+		UForceComponent *forceComponent;
 		// Called every frame
 		virtual void Tick(float DeltaTime) override;
 };

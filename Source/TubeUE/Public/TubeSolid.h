@@ -6,7 +6,6 @@
 
 UCLASS()
 class TUBEUE_API ATubeSolid : public AActor{
-	
 	GENERATED_BODY()
 	private:
 		UPROPERTY(EditAnywhere)
@@ -14,7 +13,6 @@ class TUBEUE_API ATubeSolid : public AActor{
 	protected:
 		virtual void BeginPlay() override;
 	public:	
-		// Sets default values for this actor's properties
 		ATubeSolid();
 		UPROPERTY(EditAnywhere)
 		float angle;

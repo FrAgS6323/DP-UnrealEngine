@@ -16,7 +16,7 @@ class TUBEUE_API UForceComponent : public USceneComponent{
 		UStaticMeshComponent *meshComp;
 
 		UPROPERTY(EditAnywhere, Category = "Force")
-		float force = 1.0f;
+		float force = 0.5f;
 	protected:
 		// Called when the game starts
 		virtual void BeginPlay() override;

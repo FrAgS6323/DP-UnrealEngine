@@ -9,6 +9,9 @@ ATubeGlass::ATubeGlass(){
 	PrimaryActorTick.bCanEverTick = true;
 	this->tubeGlassMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TubeGlassMesh"));
 	RootComponent = this->tubeGlassMesh;
+	this->rotateTubeComponent = CreateDefaultSubobject<URotateTube>(TEXT("RotateTubeComponent"));
+
+	this->tubeGlassMesh->SetSimulatePhysics(true);
 }
 
 // Called when the game starts or when spawned
@@ -20,4 +23,3 @@ void ATubeGlass::BeginPlay(){
 void ATubeGlass::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
 }
-
