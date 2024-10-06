@@ -46,7 +46,7 @@ void ATubeSolid::performRaycast(){
         this->distance = hitResult.Distance;
         UE_LOG(LogTemp, Warning, TEXT("Hit Distance: %f"), this->distance);
         //DrawDebugLine(GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
-        //DrawDebugPoint(GetWorld(), hitResult.Location, 10, FColor::Red, false, 1);
+        DrawDebugPoint(GetWorld(), hitResult.Location, 10, FColor::Red, false, 1);
     }else{
         DrawDebugLine(GetWorld(), startVec, endVec, FColor::Green, false, 1, 0, 1);
     }
