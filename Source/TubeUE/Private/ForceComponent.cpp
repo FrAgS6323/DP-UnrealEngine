@@ -10,8 +10,8 @@ UForceComponent::UForceComponent(){
 		UE_LOG(LogTemp, Warning, TEXT("UPID not initialized!"));
 	}
 	else {
-		this->pidController->setIdealPIDvalues();
-		//this->pidController->setPIDvalues(this->P, this->I, this->D);
+		//this->pidController->setIdealPIDvalues();
+		this->pidController->setPIDvalues(this->P, this->I, this->D);
 		this->pidController->setSaturationLimits(this->saturationMin, this->saturationMax);
 	}
 }
@@ -51,6 +51,13 @@ void UForceComponent::PIDreg(double desiredHeight, bool onOff, float deltaTime) 
 // Called every frame
 void UForceComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction){
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+#if 0
+	UE_LOG(LogTemp, Warning, TEXT("P val: = %f"), this->P);
+	UE_LOG(LogTemp, Warning, TEXT("I val: = %f"), this->I);
+	UE_LOG(LogTemp, Warning, TEXT("D val: = %f"), this->D);
+#endif
+	this->pidController->setPIDvalues(this->P, this->I, this->D);
+	this->pidController->setSaturationLimits(this->saturationMin, this->saturationMax);
 	this->PIDreg(this->destinationHeight, this->PIDswitch, DeltaTime);
 	//const FVector forceDirUp = this->GetUpVector();
 

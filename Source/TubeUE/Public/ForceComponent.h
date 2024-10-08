@@ -11,10 +11,10 @@ class TUBEUE_API UForceComponent : public USceneComponent{
 	private:
 		UPROPERTY(EditAnywhere, Category = "PID Values") bool PIDswitch = false;
 		UPROPERTY(EditAnywhere, Category = "PID Values") double destinationHeight = 20.0;
-		UPROPERTY(EditAnywhere, Category = "PID Values") double P = 1.75;
-		UPROPERTY(EditAnywhere, Category = "PID Values") double I = 0.75;
-		UPROPERTY(EditAnywhere, Category = "PID Values") double D = 0.5;
-		UPROPERTY(EditAnywhere, Category = "PID Values") double saturationMin = 2.5;
+		UPROPERTY(EditAnywhere, Category = "PID Values") double P = UPID::idealP;
+		UPROPERTY(EditAnywhere, Category = "PID Values") double I = UPID::idealI;
+		UPROPERTY(EditAnywhere, Category = "PID Values") double D = UPID::idealD;
+		UPROPERTY(EditAnywhere, Category = "PID Values") double saturationMin = 1.5;
 		UPROPERTY(EditAnywhere, Category = "PID Values") double saturationMax = 5.0;
 		UPROPERTY() UStaticMeshComponent* meshComp;
 		UPID* pidController;

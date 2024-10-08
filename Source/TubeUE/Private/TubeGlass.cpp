@@ -21,5 +21,4 @@ void ATubeGlass::BeginPlay(){
 // Called every frame
 void ATubeGlass::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
-	//UE_LOG(LogTemp, Warning, TEXT("InitHeight: = %f"), this->GetActorLocation().Z + this->motorHeight);
 }

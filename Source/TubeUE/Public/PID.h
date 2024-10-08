@@ -9,9 +9,6 @@ class TUBEUE_API UPID : public UActorComponent{
 	GENERATED_BODY()
 	private:
 		bool clamp;
-		static constexpr double idealP = 2.0; //prvotna hodnota vypocitana -> // 1.19f // 7.55f | 2.0f
-		static constexpr double idealI = 0.85f;  // 1.315f // 0.033f | 0.85f
-		static constexpr double idealD = 0.5f; // 0.329f // 0.008f | 0.5f
 		double kP,
 			   kI,
 			   kD,
@@ -24,7 +21,10 @@ class TUBEUE_API UPID : public UActorComponent{
 	protected:
 		// Called when the game starts
 		virtual void BeginPlay() override;
-	public:	
+	public:
+		static constexpr double idealP = 0.75; //prvotna hodnota vypocitana -> // 1.19f // 7.55f | 2.0f
+		static constexpr double idealI = 0.25f;  // 1.315f // 0.033f | 0.85f
+		static constexpr double idealD = 0.1f; // 0.329f // 0.008f | 0.5f
 		UPID();
 		bool detectChange(double P,
 						  double I,
