@@ -55,5 +55,4 @@ void ATubeSolid::performRaycast(){
 void ATubeSolid::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
     this->performRaycast();
-#endif
 }
