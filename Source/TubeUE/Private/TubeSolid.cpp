@@ -6,13 +6,12 @@ ATubeSolid::ATubeSolid(){
 	this->tubeSolidMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TubeSolidMesh"));
 	RootComponent = this->tubeSolidMesh;
 	this->rotateTubeComponent = CreateDefaultSubobject<URotateTube>(TEXT("RotateTubeComponent"));
-
 	this->tubeSolidMesh->SetSimulatePhysics(true);
 }
 
 void ATubeSolid::BeginPlay(){
 	Super::BeginPlay();
-
+    this->rotateTubeComponent->setMeshType(MeshType::SOLID);
 	FVector meshBounds = this->tubeSolidMesh->Bounds.BoxExtent;
 	FVector centerOfMassOffset = FVector(0.0f, 0.0f, -meshBounds.Z);
 

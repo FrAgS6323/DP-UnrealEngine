@@ -16,6 +16,7 @@ ATubeGlass::ATubeGlass(){
 // Called when the game starts or when spawned
 void ATubeGlass::BeginPlay(){
 	Super::BeginPlay();
+	this->rotateTubeComponent->setMeshType(MeshType::GLASS);
 }
 
 // Called every frame

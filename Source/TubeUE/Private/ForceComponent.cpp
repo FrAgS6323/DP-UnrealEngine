@@ -52,6 +52,7 @@ void UForceComponent::PIDreg(double desiredHeight, bool onOff, float deltaTime) 
 void UForceComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction){
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 #if 0
+
 	UE_LOG(LogTemp, Warning, TEXT("P val: = %f"), this->P);
 	UE_LOG(LogTemp, Warning, TEXT("I val: = %f"), this->I);
 	UE_LOG(LogTemp, Warning, TEXT("D val: = %f"), this->D);
