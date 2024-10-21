@@ -32,20 +32,15 @@ void URotateTube::rotate(float angleDeg){
 }
 #endif
 
-void URotateTube::setMeshType(MeshType meshtype){
-    this->meshType = meshType;
-}
-
 void URotateTube::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction){
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
     if (this->meshComp){
-       UE_LOG(LogTemp, Warning, TEXT("RotationVelDeg: %f"), this->rotationVel);
-        
-        if (MeshType::GLASS == meshType)
-            this->angle += 90.f;
-        //this->meshComp->SetRelativeRotation(FRotator(0.0f, 0.0f, this->angle)); //good but needs some tweaking!
-        //this->meshComp->SetPhysicsAngularVelocityInDegrees(FVector(0.0, 0.0, this->rotationVel));
+       UE_LOG(LogTemp, Warning, TEXT("RotationVel: %f"), this->rotationVel);
+       //this->meshComp->SetRelativeRotation(FRotator(0.0f, 0.0f, this->angle)); //good but needs some tweaking!
+       //this->meshComp->SetPhysicsAngularVelocityInDegrees(FVector(0.0, 0.0, this->rotationVel));
+       this->meshComp->AddTorqueInDegrees(FVector(this->rotationVel, 0.0, 0.0));
+       this->meshComp->WakeAllRigidBodies();
     }
 
 #if 0

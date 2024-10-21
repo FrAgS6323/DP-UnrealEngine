@@ -1,33 +1,35 @@
-﻿#include "TubeSolid.h"
+#include "Tube.h"
 
-ATubeSolid::ATubeSolid(){
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+ATube::ATube(){
 	PrimaryActorTick.bCanEverTick = true;
-	this->tubeSolidMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TubeSolidMesh"));
-	RootComponent = this->tubeSolidMesh;
+	this->sTubeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MergedTubeMesh"));
+	RootComponent = this->sTubeMesh;
 	this->rotateTubeComponent = CreateDefaultSubobject<URotateTube>(TEXT("RotateTubeComponent"));
-	this->tubeSolidMesh->SetSimulatePhysics(true);
 }
 
-void ATubeSolid::BeginPlay(){
+void ATube::BeginPlay(){
 	Super::BeginPlay();
-    this->rotateTubeComponent->setMeshType(MeshType::SOLID);
-	FVector meshBounds = this->tubeSolidMesh->Bounds.BoxExtent;
+    this->sTubeMesh->SetMobility(EComponentMobility::Movable);
+    this->sTubeMesh->SetSimulatePhysics(true);
+    this->sTubeMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+#if 0
+	FVector meshBounds = this->sTubeMesh->Bounds.BoxExtent;
 	FVector centerOfMassOffset = FVector(0.0f, 0.0f, -meshBounds.Z);
 
-	this->tubeSolidMesh->SetCenterOfMass(centerOfMassOffset, NAME_None);
+	this->sTubeMesh->SetCenterOfMass(centerOfMassOffset, NAME_None);
+#endif
 }
 
-double ATubeSolid::getDistance(){
-    return (this->distance > 0.001) ? this->distance : 0;
+double ATube::getDistance() {
+	return (this->distance > 0.001) ? this->distance : 0;
 }
 
-void ATubeSolid::performRaycast(){
+void ATube::performRaycast() {
     FVector startVec = FVector(GetActorLocation().X,
-                               GetActorLocation().Y, 
-                               GetActorLocation().Z + this->motorHeight),
-            upVec = GetActorUpVector(),
-            endVec = ((upVec * 50.0f) + startVec);
+                               GetActorLocation().Y,
+                               GetActorLocation().Z - ATube::halfTubeHeight),
+        upVec = GetActorUpVector(),
+        endVec = ((upVec * 50.0f) + startVec);
 
     FHitResult hitResult;
     FCollisionQueryParams collisionParams;
@@ -39,19 +41,20 @@ void ATubeSolid::performRaycast(){
                                                        ECC_Visibility,
                                                        collisionParams);
 
-    if (bIsHit){
+    if (bIsHit) {
         //UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *hitResult.GetActor()->GetName());
-        
+
         this->distance = hitResult.Distance;
         UE_LOG(LogTemp, Warning, TEXT("Hit Distance: %f"), this->distance);
         //DrawDebugLine(GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
         DrawDebugPoint(GetWorld(), hitResult.Location, 10, FColor::Green, false, 1);
-    }else{
+    }
+    else {
         DrawDebugLine(GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
     }
 }
 
-void ATubeSolid::Tick(float DeltaTime){
+void ATube::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
     this->performRaycast();
 }

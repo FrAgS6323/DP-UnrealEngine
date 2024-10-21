@@ -2,7 +2,7 @@
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
 #include "PID.h"
-#include "TubeSolid.h"
+#include "Tube.h"
 #include "ForceComponent.generated.h"
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -18,7 +18,7 @@ class TUBEUE_API UForceComponent : public USceneComponent{
 		UPROPERTY(EditAnywhere, Category = "PID Values") double saturationMax = 5.0;
 		UPROPERTY() UStaticMeshComponent* meshComp;
 		UPID* pidController;
-		ATubeSolid *tubeSolid;
+		ATube *tube;
 		double getRegulationHeight();
 		void PIDreg(double desiredHeight, 
 					bool onOff, 

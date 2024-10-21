@@ -21,8 +21,8 @@ void UForceComponent::BeginPlay(){
 	Super::BeginPlay();
 	this->meshComp = Cast<UStaticMeshComponent>(GetOwner()->GetRootComponent());
 
-	for (TActorIterator<ATubeSolid> it(GetWorld()); it; ++it){
-		this->tubeSolid = *it;
+	for (TActorIterator<ATube> it(GetWorld()); it; ++it){
+		this->tube = *it;
 		break;
 	}
 }
@@ -38,7 +38,7 @@ void UForceComponent::PIDreg(double desiredHeight, bool onOff, float deltaTime) 
 
 	if (!onOff) return;
 
-	double senVal = this->tubeSolid->getDistance(),
+	double senVal = this->tube->getDistance(),
 		   error = UPID::estimateError(desiredHeight, senVal),
 		   output = this->pidController ? this->pidController->getPIDOutput(error, (double)deltaTime) : 0;
 	if(!this->pidController) UE_LOG(LogTemp, Warning, TEXT("UPID not initialized!"));

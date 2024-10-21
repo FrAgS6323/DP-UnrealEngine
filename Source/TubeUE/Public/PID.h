@@ -5,7 +5,6 @@
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TUBEUE_API UPID : public UActorComponent{
-	
 	GENERATED_BODY()
 	private:
 		bool clamp;

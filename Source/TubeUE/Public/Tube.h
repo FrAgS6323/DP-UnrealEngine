@@ -1,21 +1,25 @@
 #pragma once
 #include "CoreMinimal.h"
+#include "Components/SceneComponent.h"
 #include "GameFramework/Actor.h"
+#include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "RotateTube.h"
-#include "TubeSolid.generated.h"
+#include "Tube.generated.h"
 
-UCLASS()
-class TUBEUE_API ATubeSolid : public AActor{
+UCLASS(Blueprintable)
+class TUBEUE_API ATube : public AActor{
+
 	GENERATED_BODY()
 	private:
-		const double motorHeight = 7.42f;
+		inline static constexpr double motorHeight = 7.42;
+		inline static constexpr double halfTubeHeight = 23.0;
 		double distance;
-		UPROPERTY(EditAnywhere) class UStaticMeshComponent* tubeSolidMesh;
+		UPROPERTY(VisibleAnywhere) class UStaticMeshComponent* sTubeMesh;
 		void performRaycast();
 	protected:
 		virtual void BeginPlay() override;
 	public:	
-		ATubeSolid();
+		ATube();
 		UPROPERTY(EditAnywhere) float angle;
 		UPROPERTY(EditAnywhere, Category = "Desired height") float desiredHeight;
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components") URotateTube* rotateTubeComponent;
