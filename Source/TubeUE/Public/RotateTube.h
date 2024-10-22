@@ -23,6 +23,6 @@ class TUBEUE_API URotateTube : public UActorComponent{
 		// Sets default values for this component's properties
 		URotateTube();
 		UPROPERTY(EditAnywhere, Category = "Angle") double angle = 0.0;
-		double rotationVel = 5.0;
+		UPROPERTY(EditAnywhere, Category = "Torque")double rotationTorque = 0.0;
 		virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 };

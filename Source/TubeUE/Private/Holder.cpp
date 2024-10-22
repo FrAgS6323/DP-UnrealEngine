@@ -4,7 +4,7 @@
 AHolder::AHolder() {
 	PrimaryActorTick.bCanEverTick = true;
 	this->sHolderMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Holder"));
-	this->physicsConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>(TEXT("PhysicsConstraint"));
+	//this->physicsConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>(TEXT("PhysicsConstraint"));
 	RootComponent = this->sHolderMesh;
 	this->sHolderMesh->SetSimulatePhysics(false);
 }
@@ -12,11 +12,14 @@ AHolder::AHolder() {
 void AHolder::BeginPlay() {
 	Super::BeginPlay();
 
+	FVector centerOfMassOffset = FVector(0.0f, 0.0f, 0.0f);
+	this->sHolderMesh->SetCenterOfMass(centerOfMassOffset, NAME_None);
+
 	for (TActorIterator<ATube> it(GetWorld()); it; ++it) {
 		this->tube = *it;
 		break;
 	}
-
+#if 0
 	if(this->tube)
 		this->tubeRootComponent = Cast<UPrimitiveComponent>(this->tube->GetRootComponent());
 	
@@ -33,6 +36,7 @@ void AHolder::BeginPlay() {
 		this->physicsConstraint->SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Free, 0.0f);  // Roll
 		this->physicsConstraint->SetAngularTwistLimit(EAngularConstraintMotion::ACM_Free, 0.0f);   // Yaw
 	}
+#endif
 }
 
 void AHolder::Tick(float DeltaTime) {
