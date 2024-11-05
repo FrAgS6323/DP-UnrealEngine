@@ -22,7 +22,6 @@ class TUBEUE_API ATube : public AActor{
 		ATube();
 		UPROPERTY(EditAnywhere) float angle;
 		UPROPERTY(EditAnywhere, Category = "Desired height") float desiredHeight;
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components") URotateTube* rotateTubeComponent;
 		double getDistance();
 		virtual void Tick(float DeltaTime) override;
 };

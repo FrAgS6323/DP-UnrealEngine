@@ -37,12 +37,12 @@ void URotateTube::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 
     if (this->meshComp){
        //UE_LOG(LogTemp, Warning, TEXT("RotationVel: %f"), this->rotationVel);
-       UE_LOG(LogTemp, Warning, TEXT("RotationTorque: %f"), this->rotationTorque);
+        UE_LOG(LogTemp, Warning, TEXT("RotationTorque: %f"), this->rotationTorque);
        //this->meshComp->SetRelativeRotation(FRotator(0.0f, 0.0f, this->angle)); //good but needs some tweaking!
        //this->meshComp->SetPhysicsAngularVelocityInDegrees(FVector(0.0, 0.0, this->rotationVel));
        
        //this->meshComp->WakeAllRigidBodies();
-       this->meshComp->AddTorqueInRadians(FVector(this->rotationTorque * 10000.0, 0.0, 0.0), NAME_None, true);
+       this->meshComp->AddTorqueInRadians(FVector(this->rotationTorque, 0.0, 0.0), NAME_None, true);
        
 #if 0
        // Get the current rotation of the component relative to its initial orientation

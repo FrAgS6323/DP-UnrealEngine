@@ -4,7 +4,6 @@ ATube::ATube(){
 	PrimaryActorTick.bCanEverTick = true;
 	this->sTubeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MergedTubeMesh"));
 	RootComponent = this->sTubeMesh;
-	this->rotateTubeComponent = CreateDefaultSubobject<URotateTube>(TEXT("RotateTubeComponent"));
 }
 
 void ATube::BeginPlay(){
