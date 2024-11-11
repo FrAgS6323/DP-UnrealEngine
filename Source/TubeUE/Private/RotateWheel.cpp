@@ -1,34 +1,19 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "RotateWheel.h"
 
-// Sets default values for this component's properties
-URotateWheel::URotateWheel()
-{
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
+URotateWheel::URotateWheel(){
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
-
-// Called when the game starts
-void URotateWheel::BeginPlay()
-{
+void URotateWheel::BeginPlay(){
 	Super::BeginPlay();
-
-	// ...
-	
+	this->sMeshComp = Cast<UStaticMeshComponent>(GetOwner()->GetRootComponent());
 }
 
-
-// Called every frame
-void URotateWheel::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
+void URotateWheel::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction){
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	if (this->sMeshComp) {
+		UE_LOG(LogTemp, Warning, TEXT("RotationTorque: %f"), this->rotationTorque);
+		//this->sMeshComp->SetPhysicsAngularVelocityInDegrees(FVector(0.0, this->rotationTorque, 0.0));
+		this->sMeshComp->AddTorqueInRadians(FVector(0.0, this->rotationTorque, 0.0), NAME_None, true);
+	}
 }
-

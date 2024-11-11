@@ -11,7 +11,7 @@ URotateTube::URotateTube(){
 
 void URotateTube::BeginPlay(){
 	Super::BeginPlay();
-    this->meshComp = Cast<UStaticMeshComponent>(GetOwner()->GetRootComponent());
+    this->sMeshComp = Cast<UStaticMeshComponent>(GetOwner()->GetRootComponent());
 #if 0
 	AActor* Owner = GetOwner();
 	if (Owner){
@@ -35,14 +35,14 @@ void URotateTube::rotate(float angleDeg){
 void URotateTube::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction){
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    if (this->meshComp){
+    if (this->sMeshComp){
        //UE_LOG(LogTemp, Warning, TEXT("RotationVel: %f"), this->rotationVel);
         UE_LOG(LogTemp, Warning, TEXT("RotationTorque: %f"), this->rotationTorque);
        //this->meshComp->SetRelativeRotation(FRotator(0.0f, 0.0f, this->angle)); //good but needs some tweaking!
        //this->meshComp->SetPhysicsAngularVelocityInDegrees(FVector(0.0, 0.0, this->rotationVel));
        
        //this->meshComp->WakeAllRigidBodies();
-       this->meshComp->AddTorqueInRadians(FVector(this->rotationTorque, 0.0, 0.0), NAME_None, true);
+       this->sMeshComp->AddTorqueInRadians(FVector(this->rotationTorque, 0.0, 0.0), NAME_None, true);
        
 #if 0
        // Get the current rotation of the component relative to its initial orientation

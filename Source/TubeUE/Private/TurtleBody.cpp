@@ -22,6 +22,4 @@ void ATurtleBody::BeginPlay(){
 void ATurtleBody::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
-
