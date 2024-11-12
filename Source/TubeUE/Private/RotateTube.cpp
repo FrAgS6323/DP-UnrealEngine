@@ -42,7 +42,7 @@ void URotateTube::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
        //this->meshComp->SetPhysicsAngularVelocityInDegrees(FVector(0.0, 0.0, this->rotationVel));
        
        //this->meshComp->WakeAllRigidBodies();
-       this->sMeshComp->AddTorqueInRadians(FVector(this->rotationTorque, 0.0, 0.0), NAME_None, true);
+       this->sMeshComp->AddTorqueInRadians(FVector(this->rotationTorque, 0.0, 0.0), NAME_None, false);
        
 #if 0
        // Get the current rotation of the component relative to its initial orientation

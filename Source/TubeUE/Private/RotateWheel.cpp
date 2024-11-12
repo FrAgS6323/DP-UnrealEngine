@@ -14,6 +14,6 @@ void URotateWheel::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 	if (this->sMeshComp) {
 		UE_LOG(LogTemp, Warning, TEXT("RotationTorque: %f"), this->rotationTorque);
 		//this->sMeshComp->SetPhysicsAngularVelocityInDegrees(FVector(0.0, this->rotationTorque, 0.0));
-		this->sMeshComp->AddTorqueInRadians(FVector(0.0, this->rotationTorque, 0.0), NAME_None, true);
+		this->sMeshComp->AddTorqueInRadians(FVector(0.0, this->rotationTorque, 0.0), NAME_None, false);
 	}
 }
