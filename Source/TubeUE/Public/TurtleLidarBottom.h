@@ -11,7 +11,7 @@ class TUBEUE_API ATurtleLidarBottom : public AActor
 {
 	GENERATED_BODY()
 private:
-	UPROPERTY(VisibleAnywhere) class UStaticMeshComponent* sBodyMesh;
+	UPROPERTY(VisibleAnywhere, Category = "Components") class UStaticMeshComponent* sBodyMesh;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

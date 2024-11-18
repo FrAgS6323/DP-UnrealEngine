@@ -44,7 +44,7 @@ void ATube::performRaycast() {
         //UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *hitResult.GetActor()->GetName());
 
         this->distance = hitResult.Distance;
-        UE_LOG(LogTemp, Warning, TEXT("Hit Distance: %f"), this->distance);
+        //UE_LOG(LogTemp, Warning, TEXT("Hit Distance: %f"), this->distance);
         //DrawDebugLine(GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
         DrawDebugPoint(GetWorld(), hitResult.Location, 10, FColor::Green, false, 1);
     }
