@@ -12,7 +12,7 @@ class TUBEUE_API ATurtleBody : public AActor
 {
 	GENERATED_BODY()
 	private:
-		UPROPERTY(VisibleAnywhere) class UStaticMeshComponent* sBodyMesh;
+		UPROPERTY(EditAnywhere, Category = "Components") class UStaticMeshComponent* sBodyMesh;
 
 		ATurtleWheel *dSubWheelRight,
 					 *dSubWheelLeft;

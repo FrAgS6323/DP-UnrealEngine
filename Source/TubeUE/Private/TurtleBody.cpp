@@ -4,7 +4,16 @@
 ATurtleBody::ATurtleBody(){
 	this->sBodyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TurtlebotBody"));
     if (this->sBodyMesh) RootComponent = this->sBodyMesh;
+    else UE_LOG(LogTemp, Error, TEXT("RootComponent not initialized!"));
 	PrimaryActorTick.bCanEverTick = true;
+
+    UStaticMesh* MeshAsset = Cast<UStaticMesh>(StaticLoadObject(UStaticMesh::StaticClass(), nullptr, TEXT("/Game/Models/TurtleBot/TurtlebotBody")));
+    if (MeshAsset){
+        UE_LOG(LogTemp, Warning, TEXT("Mesh loaded successfully: %s"), *MeshAsset->GetName());
+        this->sBodyMesh->SetStaticMesh(MeshAsset);
+    }else{
+        UE_LOG(LogTemp, Error, TEXT("Mesh not loaded!"));
+    }
 }
 
 // Called when the game starts or when spawned
@@ -13,6 +22,7 @@ void ATurtleBody::BeginPlay(){
     if (this->sBodyMesh) {
         this->sBodyMesh->SetMobility(EComponentMobility::Movable);
         this->sBodyMesh->SetSimulatePhysics(true);
+        this->sBodyMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
     }
     //this->attachActors();
 }
