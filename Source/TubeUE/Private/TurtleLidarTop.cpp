@@ -23,10 +23,10 @@ ATurtleLidarTop::ATurtleLidarTop(){
 void ATurtleLidarTop::BeginPlay(){
 	Super::BeginPlay();
 	this->sBodyMesh->SetMobility(EComponentMobility::Movable);
-	this->sBodyMesh->SetSimulatePhysics(false);
-	this->sBodyMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
-	this->sBodyMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
-	this->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	this->sBodyMesh->SetSimulatePhysics(true);
+	//this->sBodyMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+	//this->sBodyMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+	//this->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 }
 
 // Called every frame

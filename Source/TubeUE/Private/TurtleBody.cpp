@@ -14,7 +14,7 @@ void ATurtleBody::BeginPlay(){
         this->sBodyMesh->SetMobility(EComponentMobility::Movable);
         this->sBodyMesh->SetSimulatePhysics(true);
     }
-    this->attachActors();
+    //this->attachActors();
 }
 
 void ATurtleBody::attachActors(){
