@@ -8,10 +8,11 @@ class TUBEUE_API URotateWheel : public UActorComponent{
 	GENERATED_BODY()
 	private:
 		UStaticMeshComponent* sMeshComp;
+		AActor* owner;
 	protected:
 		virtual void BeginPlay() override;
 	public:	
 		URotateWheel();
-		UPROPERTY(EditAnywhere, Category = "Torque") double rotationTorque;
+		UPROPERTY(EditAnywhere, Category = "Velocity") double rotationVel;
 		virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 };
