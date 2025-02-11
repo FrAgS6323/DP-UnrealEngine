@@ -48,8 +48,7 @@ void ATube::performRaycast() {
         //DrawDebugLine(GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
         // 
         DrawDebugPoint(GetWorld(), hitResult.Location, 10, FColor::Green, false, 1);
-    }
-    else {
+    }else{
         DrawDebugLine(GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
     }
 }

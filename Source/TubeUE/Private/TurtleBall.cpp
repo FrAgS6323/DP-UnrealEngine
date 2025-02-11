@@ -10,8 +10,6 @@ ATurtleBall::ATurtleBall(){
 // Called when the game starts or when spawned
 void ATurtleBall::BeginPlay(){
 	Super::BeginPlay();
-	this->sBodyMesh->SetMobility(EComponentMobility::Movable);
-	this->sBodyMesh->SetSimulatePhysics(true);
 }
 
 // Called every frame

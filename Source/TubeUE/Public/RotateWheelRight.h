@@ -16,11 +16,6 @@ class TUBEUE_API URotateWheelRight : public UActorComponent {
 		static constexpr double rotationVelStop = 1;
 		UStaticMeshComponent* sMeshComp;
 		AActor* owner;
-		UPROPERTY(EditAnywhere, Category = "TurtleBot Type") TurtleBotTypeEnum eTurtleType;
-		TArray<int> ticksOne = { 656,40,1312,40,656,40,1312 },
-					ticksTwo = { 656,40,328,40,246,-40,984,-40,246,-40,574,-40,1066,40,738,40,410 },
-					ticksThree = { 1230,-40,738,-40,1230,-40,738 },
-					ticks;
 	protected:
 		virtual void BeginPlay() override;
 	public:

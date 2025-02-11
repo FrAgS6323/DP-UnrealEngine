@@ -27,7 +27,7 @@ void ARayCast::performRayCast(){
     // Draw debug line
     DrawDebugLine(GetWorld(), startPos, endPos, bHit ? FColor::Red : FColor::Green, false, 1.0f, 0, 1.0f);
 
-    if (bHit) UE_LOG(LogTemp, Warning, TEXT("Hit: %s"), *hitResult.GetActor()->GetName());
+    //if (bHit) UE_LOG(LogTemp, Warning, TEXT("Hit: %s"), *hitResult.GetActor()->GetName());
 }
 
 void ARayCast::Tick(float DeltaTime){

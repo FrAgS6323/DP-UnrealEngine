@@ -15,7 +15,5 @@ class TUBEUE_API ATurtleWheel : public AActor
 
 	public:	
 		ATurtleWheel();
-		
 		virtual void Tick(float DeltaTime) override;
-
 };

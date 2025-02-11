@@ -1,28 +1,27 @@
 #include "TurtleWheel.h"
+#include "../EngineHelper.h"
 
 // Sets default values
 ATurtleWheel::ATurtleWheel(){
-	PrimaryActorTick.bCanEverTick = true;
-	this->sWheelMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TurtleWheel"));
-	RootComponent = this->sWheelMesh;
+    UWorld* world = GetWorld();
 
-	//static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("/Game/Models/TurtleBot/TurtlebotLidarTop"));
-	UStaticMesh* MeshAsset = Cast<UStaticMesh>(StaticLoadObject(UStaticMesh::StaticClass(), nullptr, TEXT("/Game/Models/TurtleBot/TurtlebotWheelLeft")));
-	if (MeshAsset)
-	{
-		this->sWheelMesh->SetStaticMesh(MeshAsset);
-		UE_LOG(LogTemp, Warning, TEXT("Mesh loaded successfully: %s"), *MeshAsset->GetName());
-	}
-	else {
-		UE_LOG(LogTemp, Error, TEXT("Mesh not loaded!"));
-	}
+    PrimaryActorTick.bCanEverTick = true;
+    this->sWheelMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TurtleWheelLeft"));
+    UEngineHelper::loadMeshStatic(TEXT("/Game/Models/TurtleBot/TurtlebotWheelLeft"), this->sWheelMesh);
+
+    if (this->sWheelMesh) {
+        RootComponent = this->sWheelMesh;
+    }
+    else {
+        UE_LOG(LogTemp, Error, TEXT("RootComponent not initialized!"));
+    }
 }
 
 // Called when the game starts or when spawned
 void ATurtleWheel::BeginPlay(){
 	Super::BeginPlay();
 	this->sWheelMesh->SetMobility(EComponentMobility::Movable);
-	this->sWheelMesh->SetSimulatePhysics(true);
+	this->sWheelMesh->SetSimulatePhysics(false);
 }
 
 // Called every frame
