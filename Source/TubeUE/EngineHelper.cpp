@@ -92,9 +92,9 @@ auto UEngineHelper::performRaycast(AActor *actor,
 		//UE_LOG(LogTemp, Warning, TEXT("Hit Distance: %f"), this->distance);
 		//DrawDebugLine(GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
 		// 
-		DrawDebugPoint(actor->GetWorld(), hitResult.Location, 10, FColor::Green, false, 1);
+		if(enableDebugRay) DrawDebugPoint(actor->GetWorld(), hitResult.Location, 10, FColor::Green, false, 1);
 	}else{
-		DrawDebugLine(actor->GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
+		if(enableDebugRay) DrawDebugLine(actor->GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
 	}
 	return bIsHit;
 }
