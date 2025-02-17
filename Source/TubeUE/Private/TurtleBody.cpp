@@ -4,7 +4,7 @@
 // Sets default values
 ATurtleBody::ATurtleBody() {
     PrimaryActorTick.bCanEverTick = true;
-    this->RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+    this->RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponentTurtlebot"));
     this->sBodyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TurtlebotBody"));
     this->sLeftWheelMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TurtlebotLeftWheel"));
     this->sRightWheelMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TurtlebotRightWheel"));
@@ -28,7 +28,7 @@ ATurtleBody::ATurtleBody() {
         if (this->sLidarBottomMesh) this->sLidarBottomMesh->SetupAttachment(this->sBodyMesh);
         if (this->sLidarTopMesh) this->sLidarTopMesh->SetupAttachment(this->sBodyMesh);
     }else{
-        UE_LOG(LogTemp, Error, TEXT("RootComponent not initialized!"));
+        UE_LOG(LogTemp, Error, TEXT("RootComponentTurtlebot not initialized!"));
     }
 
     UEngineHelper::loadMeshDynamic(TEXT("/Game/Models/TurtleBot/TurtlebotBody"), this->sBodyMesh);
