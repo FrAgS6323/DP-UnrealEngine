@@ -68,7 +68,8 @@ void UEngineHelper::setupConstraint(UPhysicsConstraintComponent* constraint,
 
 auto UEngineHelper::performRaycast(AActor *actor, 
 								   FVector startOffset, 
-								   FVector rayDirection, 
+								   FVector rayDirection,
+								   TArray<UPrimitiveComponent*> meshesToExclude,
 								   bool enableDebugRay,
 								   double rayLength,
 								   double &hitDistance) -> bool {
@@ -77,7 +78,12 @@ auto UEngineHelper::performRaycast(AActor *actor,
 
 	FHitResult hitResult;
 	FCollisionQueryParams collisionParams;
-	collisionParams.AddIgnoredActor(actor);
+
+	meshesToExclude.IsEmpty() 
+		? 
+		collisionParams.AddIgnoredActor(actor) 
+		: 
+		collisionParams.AddIgnoredComponents(meshesToExclude);
 
 	bool bIsHit = actor->GetWorld()->LineTraceSingleByChannel(hitResult,
 															  startVec,

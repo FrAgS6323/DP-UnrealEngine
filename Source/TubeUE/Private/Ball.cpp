@@ -10,7 +10,7 @@ ABall::ABall(){
 	this->ballMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BallMesh"));
 	RootComponent = this->ballMesh;
 
-	this->forceComponent = CreateDefaultSubobject<UForceComponent>(TEXT("ForceComponent"));
+	//this->forceComponent = CreateDefaultSubobject<UForceComponent>(TEXT("ForceComponent"));
 	this->ballMesh->SetSimulatePhysics(true);
 	this->ballMesh->SetEnableGravity(true);
 	this->ballMesh->SetMassOverrideInKg(NAME_None, 0.0027f);

@@ -1,12 +1,23 @@
 #include "PID.h"
 
-UPID::UPID(){
-	PrimaryComponentTick.bCanEverTick = true;
+UPID::UPID():
+	clamp(false),
+	p(0.0),
+	i(0.0),
+	d(0.0),
+	kP(UPID::idealP),
+	kI(UPID::idealI),
+	kD(UPID::idealD),
+	saturationLimitMin(0.0),
+	saturationLimitMax(0.0){
+	//PrimaryComponentTick.bCanEverTick = true;
 }
 
+#if 0
 void UPID::BeginPlay(){
 	Super::BeginPlay();	
 }
+#endif
 
 bool UPID::detectChange(double P,
 						double I,
@@ -112,6 +123,8 @@ template <typename T> static int UPID::sgn(T val) {
 	return (T(0) < val) - (val < T(0));
 }
 
+#if 0
 void UPID::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction){
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
+#endif

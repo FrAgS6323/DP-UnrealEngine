@@ -213,13 +213,14 @@ void ATurtleBody::turnLidar(double direction, bool bRaycast){
            hitDistance = 0.0f;
 
     if (bRaycast){
-        if(UEngineHelper::performRaycast(this, 
-                                         FVector(0, 0, 13.25f),
-                                         this->sLidarTopMesh->GetForwardVector(), 
-                                         true, 
-                                         rayLength,
-                                         hitDistance))
-            if(hitDistance > 0) UE_LOG(LogTemp, Warning, TEXT("Lidar hit distance: %ld"), hitDistance);
+        /*if (*/UEngineHelper::performRaycast(this,
+                                              FVector(0, 0, 13.25f),
+                                              this->sLidarTopMesh->GetForwardVector(),
+                                              {},
+                                              true,
+                                              rayLength,
+                                              hitDistance);/*)*/
+            //if(hitDistance > 0) UE_LOG(LogTemp, Warning, TEXT("Lidar hit distance: %ld"), hitDistance);
     }
 
     this->sLidarTopMesh->SetPhysicsAngularVelocityInDegrees(worldAngularVelocity, false);

@@ -1,11 +1,9 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "PID.generated.h"
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class TUBEUE_API UPID : public UActorComponent{
-	GENERATED_BODY()
+class TUBEUE_API UPID{
+	//GENERATED_BODY()
 	private:
 		bool clamp;
 		double kP,
@@ -19,7 +17,7 @@ class TUBEUE_API UPID : public UActorComponent{
 			   d;
 	protected:
 		// Called when the game starts
-		virtual void BeginPlay() override;
+		//virtual void BeginPlay() override;
 	public:
 		static constexpr double idealP = 0.75; //prvotna hodnota vypocitana -> // 1.19f // 7.55f | 2.0f
 		static constexpr double idealI = 0.25f;  // 1.315f // 0.033f | 0.85f
@@ -37,5 +35,5 @@ class TUBEUE_API UPID : public UActorComponent{
 		double getPIDOutputOverload(double currentError, double deltaTime);
 		static double estimateError(double desiredPos, double currentPos);
 		template <typename T> static int sgn(T val);
-		virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+		//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 };

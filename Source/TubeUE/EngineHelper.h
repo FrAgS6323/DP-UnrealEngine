@@ -29,6 +29,7 @@ class TUBEUE_API UEngineHelper : public UObject {
 		static auto performRaycast(AActor *actor, 
 								   FVector startOffset, 
 								   FVector rayDirection,
+								   TArray<UPrimitiveComponent*> meshesToExclude,
 								   bool enableDebugRay,
 								   double rayLength,
 								   double& hitDistance) -> bool;

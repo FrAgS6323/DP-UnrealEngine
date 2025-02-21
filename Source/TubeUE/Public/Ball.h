@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ForceComponent.h"
+//#include "ForceComponent.h"
 #include "Ball.generated.h"
 
 UCLASS(BlueprintType, Blueprintable)
@@ -17,7 +17,7 @@ class TUBEUE_API ABall : public AActor{
 		virtual void BeginPlay() override;
 	public:	
 		ABall();
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components") UForceComponent* forceComponent;
+		//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components") UForceComponent* forceComponent;
 		double getRadius();
 		virtual void Tick(float DeltaTime) override;
 };

@@ -22,6 +22,9 @@ ATube::ATube(){
     UEngineHelper::loadMeshDynamic(TEXT("/Game/Models/Holder/Holder"), this->sHolderMesh);
     UEngineHelper::loadMeshDynamic(TEXT("/Game/Models/Ball/Ball"), this->sBallMesh);
 
+    this->pidController = new UPID();
+    this->pidController->setSaturationLimits(0.0, 10.0);
+
     this->initialize();
 }
 
@@ -36,7 +39,9 @@ void ATube::BeginPlay(){
 }
 
 void ATube::initialize(){
+    constexpr double ballRadius = 0.015;
     this->sTubeMesh->SetRelativeLocation(FVector(6.0, 0, 0));
+    this->sBallMesh->SetRelativeLocation(FVector(0, 0, -ATube::halfTubeHeight + ballRadius));
     //this->leftWheelJoint->SetRelativeLocation(this->sLeftWheelMesh->GetRelativeLocation());
 
     this->sHolderMesh->SetSimulatePhysics(true);
@@ -52,7 +57,9 @@ void ATube::initialize(){
         this->sHolderMesh->SetRelativeRotation(FRotator(0, 180, 0));
         this->sHolderMesh->SetMobility(EComponentMobility::Movable);
         this->sHolderMesh->SetWorldLocation(this->GetActorLocation());
-        this->sHolderMesh->SetMassOverrideInKg(NAME_None, 1.0f, true);
+        this->sHolderMesh->SetMassOverrideInKg(NAME_None, 10.0f, true);
+
+        this->sTubeMesh->SetMobility(EComponentMobility::Movable);
 
         UEngineHelper::setupConstraint(this->tubeJoint,
             this->sHolderMesh,
@@ -65,20 +72,28 @@ void ATube::initialize(){
             EAngularConstraintMotion::ACM_Locked, 0.0f,
             EAngularConstraintMotion::ACM_Free, 0.0f);
 
+        //this->tubeJoint->SetAngularDriveMode(EAngularDriveMode::TwistAndSwing);
+        //this->tubeJoint->SetAngularOrientationDrive(false , true);
+        //this->tubeJoint->SetAngularDriveParams(1000000.0f, 5000.0f, 1000000.0f); // Sila a tlmenie
+
         //this->sTubeMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
         this->sTubeMesh->SetMobility(EComponentMobility::Movable);
-        this->sTubeMesh->SetMassOverrideInKg(NAME_None, 0.2f, true);
+        this->sTubeMesh->SetMassOverrideInKg(NAME_None, 0.15f, true);
         this->sTubeMesh->BodyInstance.bAutoWeld = false;
 
         this->sBallMesh->SetMobility(EComponentMobility::Movable);
-        this->sBallMesh->SetMassOverrideInKg(NAME_None, 0.2f, true);
+        this->sBallMesh->SetMassOverrideInKg(NAME_None, 0.0027f, true);
         this->sBallMesh->BodyInstance.bAutoWeld = false;
     }
 }
 
 auto ATube::getDistance() -> double {
 	return (this->distance > 0.001) ? this->distance : 0;
+}
+
+auto ATube::getRegulationHeight() -> double {
+    return 45.0f;
 }
 
 void ATube::performRaycast() {
@@ -111,8 +126,58 @@ void ATube::performRaycast() {
     }
 }
 
+void ATube::PIDreg(float deltaTime) {
+    if ((this->desiredHeight > this->getRegulationHeight()) ||
+        (this->desiredHeight < 0))
+        UE_LOG(LogTemp, Warning, TEXT("Wrong input! (Expected between 0 and %f)"), this->getRegulationHeight());
+
+    if (!this->bPidSwitch) return;
+
+    if (!this->pidController) UE_LOG(LogTemp, Warning, TEXT("UPID not initialized!"));
+
+    double error = UPID::estimateError(this->desiredHeight, this->distance),
+           //output = this->pidController->getPIDOutput(error, (double)deltaTime);
+           output = this->pidController ? this->pidController->getPIDOutput(error, (double)deltaTime) : 0;
+    
+    UE_LOG(LogTemp, Warning, TEXT("PIDerror: = %f"), error);
+    UE_LOG(LogTemp, Warning, TEXT("PIDoutput: = %f"), output);
+    if (this->sBallMesh) this->sBallMesh->AddForce(FVector(0, 0, output));
+}
+
 void ATube::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
-    this->performRaycast();
 
+    UE_LOG(LogTemp, Warning, TEXT("Tube absolute location: %s"), this->sTubeMesh->IsUsingAbsoluteLocation() ? TEXT("True") : TEXT("False"));
+    constexpr double rayLength = 50.0;
+    FVector tubePos = this->sTubeMesh->GetRelativeLocation();
+    TArray<UPrimitiveComponent*> meshesToExclude = {this->sTubeMesh};
+
+    UEngineHelper::performRaycast(this, 
+                                  FVector(-tubePos.X,
+                                          tubePos.Y,
+                                          tubePos.Z), 
+                                  this->sTubeMesh->GetUpVector(),
+                                  meshesToExclude,
+                                  true, 
+                                  rayLength,
+                                  this->distance);
+
+    if (this->distance > 0) UE_LOG(LogTemp, Warning, TEXT("Tube hit distance: %ld"), this->distance);
+    //this->performRaycast();
+    this->bSetIdealPID 
+        ? 
+        this->pidController->setIdealPIDvalues() 
+        : 
+        this->pidController->setPIDvalues(this->P,
+                                          this->I,
+                                          this->D);
+    this->PIDreg(DeltaTime);
+    this->sTubeMesh->SetPhysicsAngularVelocityInDegrees(FVector(this->angle, 0.0f, 0.0f), false);
+    //UE_LOG(LogTemp, Warning, TEXT("Angle: %f"), this->angle);
 }
+
+#if 0
+ATube::~ATube(){
+    if (this->pidController) delete this->pidController;
+}
+#endif
