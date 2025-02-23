@@ -14,7 +14,11 @@ class TUBEUE_API ATube : public AActor{
 	private:
 		inline static constexpr double motorHeight = 7.42;
 		inline static constexpr double halfTubeHeight = 23.0;
-		double distance;
+		inline static constexpr double height = 58.0f;
+		inline static constexpr double minAngle = 0.0;
+		inline static constexpr double maxAngle = 60.0;
+		inline static constexpr double numRotationVel = 1.0;
+		double distance, angleDeg;
 		TObjectPtr<UStaticMeshComponent> sTubeMesh;
 		TObjectPtr<UStaticMeshComponent> sHolderMesh;
 		TObjectPtr<UStaticMeshComponent> sBallMesh;
@@ -25,6 +29,7 @@ class TUBEUE_API ATube : public AActor{
 		auto getDistance() -> double;
 		auto getRegulationHeight() -> double;
 		void PIDreg(float deltaTime);
+		void rotate(double inAngleDeg);
 	protected:
 		virtual void BeginPlay() override;
 	public:	
@@ -34,7 +39,7 @@ class TUBEUE_API ATube : public AActor{
 		UPROPERTY(EditAnywhere, Category = "PID") double P;
 		UPROPERTY(EditAnywhere, Category = "PID") double I;
 		UPROPERTY(EditAnywhere, Category = "PID") double D;
-		UPROPERTY(EditAnywhere, Category = "Settings") double angle = 45.0;
+		UPROPERTY(EditAnywhere, Category = "Settings") double inAngle = 0.0;
 		UPROPERTY(EditAnywhere, Category = "Settings") double desiredHeight;
 		//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Joint") class UPhysicsConstraintComponent* tubeJoint;
 		virtual void Tick(float DeltaTime) override;

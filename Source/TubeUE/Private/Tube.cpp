@@ -97,21 +97,57 @@ auto ATube::getRegulationHeight() -> double {
 }
 
 void ATube::performRaycast() {
-    FVector tubePos = this->sTubeMesh->GetRelativeLocation(),
-            startVec = FVector(tubePos.X,
-                               tubePos.Y,
-                               tubePos.Z - ATube::halfTubeHeight),
-        endVec = ((this->GetActorUpVector() * 50.0f) + startVec);
+        //distanceFromTubeOriginToBottom = (this->height - this->motorHeight - this->upperHeight) / 2,
+    double angleDegToSplit = 0,
+        raycastDistanceFromOriginY = 0,
+        raycastDistanceFromOriginZ = ATube::halfTubeHeight; //distanceFromTubeOriginToBottom;
+    FVector tubePos = this->sTubeMesh->GetComponentLocation(),
+            raycastPos(tubePos.X, tubePos.Y, tubePos.Z);
+
+    if (0 != this->angleDeg) {
+        if (this->angleDeg > 0) angleDegToSplit = 360 - this->angleDeg;
+        else angleDegToSplit = 180 + abs(this->angleDeg);
+
+        raycastDistanceFromOriginY = ATube::halfTubeHeight * cos(UEngineHelper::degToRad(angleDegToSplit));
+        raycastDistanceFromOriginZ = ATube::halfTubeHeight * sin(UEngineHelper::degToRad(angleDegToSplit));
+
+        raycastPos.Y = tubePos.Y + raycastDistanceFromOriginY;
+
+        raycastPos.Z = tubePos.Z - abs(raycastDistanceFromOriginZ);
+    }
+    else{
+        raycastPos.Z = tubePos.Z - raycastDistanceFromOriginZ;
+    }
+
+#if 0
+    UEngineHelper::performRaycast(this,
+        FVector(-tubePos.X,
+            tubePos.Y,
+            tubePos.Z),
+        this->sTubeMesh->GetUpVector(),
+        meshesToExclude,
+        true,
+        rayLength,
+        this->distance);
+
+#endif
+    //FVector tubePos = this->sTubeMesh->GetRelativeLocation(),
+#if 0
+        startVec = FVector(tubePos.X,
+            tubePos.Y,
+            tubePos.Z - ATube::halfTubeHeight),
+#endif
+    FVector endVec = ((this->sTubeMesh->GetUpVector() * 50.0f) + raycastPos);
 
     FHitResult hitResult;
     FCollisionQueryParams collisionParams;
     collisionParams.AddIgnoredComponent(this->sTubeMesh);
 
-    bool bIsHit = GetWorld()->LineTraceSingleByChannel(hitResult,
-                                                       startVec,
-                                                       endVec,
-                                                       ECC_Visibility,
-                                                       collisionParams);
+    bool bIsHit = this->GetWorld()->LineTraceSingleByChannel(hitResult,
+        raycastPos,
+        endVec,
+        ECC_Visibility,
+        collisionParams);
 
     if (bIsHit) {
         //UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *hitResult.GetActor()->GetName());
@@ -120,9 +156,12 @@ void ATube::performRaycast() {
         //UE_LOG(LogTemp, Warning, TEXT("Hit Distance: %f"), this->distance);
         //DrawDebugLine(GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
         // 
-        DrawDebugPoint(GetWorld(), hitResult.Location, 10, FColor::Green, false, 1);
-    }else{
-        DrawDebugLine(GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
+        
+        DrawDebugLine(GetWorld(), raycastPos, endVec, FColor::Green, false, 1, 0, 1);
+        //DrawDebugPoint(GetWorld(), hitResult.Location, 10, FColor::Green, false, 1);
+    }
+    else {
+        DrawDebugLine(GetWorld(), raycastPos, endVec, FColor::Red, false, 1, 0, 1);
     }
 }
 
@@ -144,14 +183,34 @@ void ATube::PIDreg(float deltaTime) {
     if (this->sBallMesh) this->sBallMesh->AddForce(FVector(0, 0, output));
 }
 
+void ATube::rotate(double inAngleDeg){
+    if (std::abs(inAngleDeg) > this->maxAngle) std::runtime_error("Wrong angle!");
+
+    FRotator currentRotation = this->sTubeMesh->GetComponentRotation();
+    double deltaAngleDeg = inAngleDeg - round(currentRotation.Roll);
+
+    if (deltaAngleDeg < 0 && round(currentRotation.Roll) != inAngleDeg) this->angleDeg -= this->numRotationVel;
+    else if (deltaAngleDeg > 0 && round(currentRotation.Roll) != inAngleDeg) this->angleDeg += this->numRotationVel;
+
+    UE_LOG(LogTemp, Warning, TEXT("AngleDeg: %f currRotRoll: %f delta: %f"), this->angleDeg, currentRotation.Roll, deltaAngleDeg);
+
+    FRotator newRotation = FRotator(currentRotation.Pitch,
+                                    currentRotation.Yaw,
+                                    this->angleDeg);
+
+    this->sTubeMesh->SetWorldTransform(FTransform(newRotation, this->sTubeMesh->GetComponentLocation()), false, nullptr, ETeleportType::None);
+    
+    //this->sTubeMesh->SetPhysicsAngularVelocityInDegrees(FVector(angleDeg, 0.0f, 0.0f), false);
+}
+
 void ATube::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
 
-    UE_LOG(LogTemp, Warning, TEXT("Tube absolute location: %s"), this->sTubeMesh->IsUsingAbsoluteLocation() ? TEXT("True") : TEXT("False"));
+    //UE_LOG(LogTemp, Warning, TEXT("Tube absolute location: %s"), this->sTubeMesh->IsUsingAbsoluteLocation() ? TEXT("True") : TEXT("False"));
     constexpr double rayLength = 50.0;
     FVector tubePos = this->sTubeMesh->GetRelativeLocation();
     TArray<UPrimitiveComponent*> meshesToExclude = {this->sTubeMesh};
-
+#if 0
     UEngineHelper::performRaycast(this, 
                                   FVector(-tubePos.X,
                                           tubePos.Y,
@@ -161,9 +220,10 @@ void ATube::Tick(float DeltaTime){
                                   true, 
                                   rayLength,
                                   this->distance);
+#endif
 
-    if (this->distance > 0) UE_LOG(LogTemp, Warning, TEXT("Tube hit distance: %ld"), this->distance);
-    //this->performRaycast();
+    //if (this->distance > 0) UE_LOG(LogTemp, Warning, TEXT("Tube hit distance: %ld"), this->distance);
+    
     this->bSetIdealPID 
         ? 
         this->pidController->setIdealPIDvalues() 
@@ -172,8 +232,8 @@ void ATube::Tick(float DeltaTime){
                                           this->I,
                                           this->D);
     this->PIDreg(DeltaTime);
-    this->sTubeMesh->SetPhysicsAngularVelocityInDegrees(FVector(this->angle, 0.0f, 0.0f), false);
-    //UE_LOG(LogTemp, Warning, TEXT("Angle: %f"), this->angle);
+    this->rotate(this->inAngle);
+    this->performRaycast();
 }
 
 #if 0

@@ -1,4 +1,5 @@
 #include "EngineHelper.h"
+#include "Math/UnrealMathUtility.h"
 #include "Kismet/GameplayStatics.h"
 
 void UEngineHelper::loadMeshStatic(const TCHAR* path, UStaticMeshComponent* parentComp){
@@ -103,4 +104,8 @@ auto UEngineHelper::performRaycast(AActor *actor,
 		if(enableDebugRay) DrawDebugLine(actor->GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
 	}
 	return bIsHit;
+}
+
+auto UEngineHelper::degToRad(double deg)->double {
+		return (deg * PI) / 180;
 }
