@@ -187,12 +187,13 @@ void ATube::rotate(double inAngleDeg){
     if (std::abs(inAngleDeg) > this->maxAngle) std::runtime_error("Wrong angle!");
 
     FRotator currentRotation = this->sTubeMesh->GetComponentRotation();
-    double deltaAngleDeg = inAngleDeg - round(currentRotation.Roll);
+    double roundCurrRotation = round(currentRotation.Roll),
+           deltaAngleDeg = inAngleDeg - roundCurrRotation;
 
-    if (deltaAngleDeg < 0 && round(currentRotation.Roll) != inAngleDeg) this->angleDeg -= this->numRotationVel;
-    else if (deltaAngleDeg > 0 && round(currentRotation.Roll) != inAngleDeg) this->angleDeg += this->numRotationVel;
+    if (deltaAngleDeg < 0 && roundCurrRotation != inAngleDeg) this->angleDeg -= this->numRotationVel;
+    else if (deltaAngleDeg > 0 && roundCurrRotation != inAngleDeg) this->angleDeg += this->numRotationVel;
 
-    UE_LOG(LogTemp, Warning, TEXT("AngleDeg: %f currRotRoll: %f delta: %f"), this->angleDeg, currentRotation.Roll, deltaAngleDeg);
+    UE_LOG(LogTemp, Warning, TEXT("AngleDeg: %f currRotRoll: %f  roundCurrRotation: %f delta: %f"), this->angleDeg, currentRotation.Roll, roundCurrRotation, deltaAngleDeg);
 
     FRotator newRotation = FRotator(currentRotation.Pitch,
                                     currentRotation.Yaw,
