@@ -9,8 +9,40 @@ class TUBEUE_API ACase : public AActor
 {
 	GENERATED_BODY()
 	private:
+		static constexpr size_t displaySize = 5;
+		int displayUpNumBefore,
+			displayDownNumBefore;
+		typedef struct matElementData {
+			bool bSwitch;
+			int slot;
+			TObjectPtr<UMaterialInterface> matOff;
+			TObjectPtr<UMaterialInterface> matOn;
+		}MatElementData;
 		TObjectPtr<UStaticMeshComponent> sCaseMesh;
-		TObjectPtr < UMaterialInterface> mRedButton;
+		MatElementData blueButton,
+						greenButton, 
+						redButton, 
+						yellowButton;
+		TArray<MatElementData> sevenSegOne, sevenSegTwo;
+		TArray<TArray<MatElementData>> displayUp, displayDown;
+		void initSegArray(TArray<MatElementData>& segArray, 
+						  const TArray<int>& slots, 
+						  const TCHAR* offMatPath,
+						  const TCHAR* onMatPath);
+		void initDisplay(TArray<TArray<MatElementData>> &display, 
+						 const TArray<TArray<int>>& slots, 
+						 const TCHAR* offMatPath,
+						 const TCHAR* onMatPath);
+		auto numToDigits(const int &num) -> TArray<int>;
+		void numToSegments(const int &num, TArray<MatElementData>& segArray);
+		void numToDisplay(const int& num, TArray<TArray<MatElementData>>& display);
+		void renderSegArray(const TArray<MatElementData>& segArray);
+		void renderDisplay(const TArray<TArray<MatElementData>> &display,
+						   int& oldNum,
+						   const int& newNum);
+		void clearSegArray(const TArray<MatElementData>& segArray);
+		void clearDisplay(const TArray<TArray<MatElementData>>& display);
+		void renderMaterials();
 		//TObjectPtr<UPointLightComponent> pointLight;
 	protected:
 		// Called when the game starts or when spawned
@@ -22,6 +54,10 @@ class TUBEUE_API ACase : public AActor
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Buttons") bool bRedButton;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Buttons") bool bGreenButton;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Buttons") bool bYellowButton;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SevenSegDisplays") int sevenSegOneNum;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SevenSegDisplays") int sevenSegTwoNum;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Displays") int displayUpNum;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Displays") int displayDownNum;
 		// Called every frame
 		virtual void Tick(float DeltaTime) override;
 };

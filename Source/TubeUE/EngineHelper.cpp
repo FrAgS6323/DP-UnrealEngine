@@ -24,9 +24,10 @@ void UEngineHelper::loadMeshDynamic(const TCHAR* path, UStaticMeshComponent *par
 	}
 }
 
-void UEngineHelper::loadMaterialDynamic(const TCHAR* path, UStaticMeshComponent* mesh, int slot){
+auto UEngineHelper::loadMaterialDynamic(const TCHAR* path) -> UMaterialInterface* {
 	UMaterialInterface* mat = LoadObject<UMaterialInterface>(nullptr, path);
 
+#if 0
 	if (mat && mesh) {
 		//UE_LOG(LogTemp, Warning, TEXT("Material loaded successfully (dynamic): %s"), *mat->GetName());
 		mesh->SetMaterial(slot, mat);
@@ -34,6 +35,8 @@ void UEngineHelper::loadMaterialDynamic(const TCHAR* path, UStaticMeshComponent*
 	else {
 		//UE_LOG(LogTemp, Error, TEXT("Material not loaded!"));
 	}
+#endif
+	return mat;
 }
 
 void UEngineHelper::setupConstraint(UPhysicsConstraintComponent* constraint,

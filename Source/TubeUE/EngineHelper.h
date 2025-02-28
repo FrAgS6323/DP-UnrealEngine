@@ -10,7 +10,7 @@ class TUBEUE_API UEngineHelper : public UObject {
 	public:
 		static void loadMeshStatic(const TCHAR* path, UStaticMeshComponent* parentComp);
 		static void loadMeshDynamic(const TCHAR* path, UStaticMeshComponent* parentComp);
-		static void loadMaterialDynamic(const TCHAR* path, UStaticMeshComponent* mesh, int slot);
+		static auto loadMaterialDynamic(const TCHAR* path) -> UMaterialInterface*;
 		static void setupConstraint(UPhysicsConstraintComponent* constraint, 
 									USceneComponent* attachToComponent,
 									UPrimitiveComponent* stillComponent,
