@@ -33,6 +33,7 @@ class TUBEUE_API ATurtleBody : public APawn{
 		void initialize();
 		void moveFB(float value);
 		void moveLR(float value);
+		void moveRobot(float value);
 		void turnLidar(double speed, bool bRaycast);
 
 		void rotateWheel(UStaticMeshComponent* wheel, double direction);
@@ -41,6 +42,11 @@ class TUBEUE_API ATurtleBody : public APawn{
 		virtual void BeginPlay() override;
 	public:	
 		ATurtleBody();
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement") bool bForward;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement") bool bBackward;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement") bool bTurnLeft;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement") bool bTurnRight;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lidar") bool bTurnLidar;
 		void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent);
 		//virtual void OnConstruction(const FTransform& Transform) override;
 		virtual void Tick(float DeltaTime) override;

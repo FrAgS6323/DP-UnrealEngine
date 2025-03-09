@@ -206,6 +206,13 @@ void ATurtleBody::moveLR(float value){
     }
 }
 
+void ATurtleBody::moveRobot(float value){
+    if (this->bForward) this->moveFB(value);
+    else if (this->bBackward) this->moveFB(-value);
+    else if (this->bTurnLeft) this->moveLR(-value);
+    else if (this->bTurnRight) this->moveLR(value);
+}
+
 void ATurtleBody::turnLidar(double direction, bool bRaycast){
     FVector localAngularVelocity = FVector(0.0f, 0.0f, ATurtleBody::lidarRotationVel * direction);
     FVector worldAngularVelocity = this->sLidarTopMesh->GetComponentTransform().TransformVector(localAngularVelocity);
@@ -213,16 +220,16 @@ void ATurtleBody::turnLidar(double direction, bool bRaycast){
            hitDistance = 0.0f;
 
     if (bRaycast){
-        /*if (*/UEngineHelper::performRaycast(this,
-                                              FVector(0, 0, 13.25f),
-                                              this->sLidarTopMesh->GetForwardVector(),
-                                              {},
-                                              true,
-                                              rayLength,
-                                              hitDistance);/*)*/
+        UEngineHelper::performRaycast(this->GetWorld(),
+                                      this->sLidarTopMesh,
+                                      FVector(0, 0, 0),
+                                      this->sLidarTopMesh->GetForwardVector(),
+                                      { this->sLidarTopMesh, this->sLidarBottomMesh },
+                                      bRaycast,
+                                      rayLength,
+                                      hitDistance);
             //if(hitDistance > 0) UE_LOG(LogTemp, Warning, TEXT("Lidar hit distance: %ld"), hitDistance);
     }
-
     this->sLidarTopMesh->SetPhysicsAngularVelocityInDegrees(worldAngularVelocity, false);
 }
 
@@ -236,8 +243,9 @@ void ATurtleBody::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 // Called every frame
 void ATurtleBody::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
+    this->moveRobot(0.5);
 
-    this->rotateWheel(this->sLeftWheelMesh, 0.5f);
-    this->rotateWheel(this->sRightWheelMesh, -0.5f);
-    this->turnLidar(0.5f, true);
+    //this->rotateWheel(this->sLeftWheelMesh, 0.5f);
+    //this->rotateWheel(this->sRightWheelMesh, -0.5f);
+    this->bTurnLidar ? this->turnLidar(0.5f, true) : this->turnLidar(0.0f, false);
 }

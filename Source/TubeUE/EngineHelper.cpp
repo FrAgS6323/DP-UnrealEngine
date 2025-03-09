@@ -82,30 +82,27 @@ void UEngineHelper::setupConstraint(UPhysicsConstraintComponent* constraint,
 	constraint->SetAngularTwistLimit(twistMotionType, twistLimitAngle);
 }
 
-auto UEngineHelper::performRaycast(AActor *actor, 
+auto UEngineHelper::performRaycast(UWorld *world,
+								   UStaticMeshComponent *mesh,
 								   FVector startOffset, 
 								   FVector rayDirection,
 								   TArray<UPrimitiveComponent*> meshesToExclude,
 								   bool enableDebugRay,
 								   double rayLength,
 								   double &hitDistance) -> bool {
-	FVector startVec = actor->GetActorLocation() + startOffset,
+	FVector startVec = mesh->GetComponentLocation() + startOffset,
 			endVec = ((rayDirection * rayLength) + startVec);
 
 	FHitResult hitResult;
 	FCollisionQueryParams collisionParams;
 
-	meshesToExclude.IsEmpty() 
-		? 
-		collisionParams.AddIgnoredActor(actor) 
-		: 
-		collisionParams.AddIgnoredComponents(meshesToExclude);
+	if(!meshesToExclude.IsEmpty())  collisionParams.AddIgnoredComponents(meshesToExclude);	
 
-	bool bIsHit = actor->GetWorld()->LineTraceSingleByChannel(hitResult,
-															  startVec,
-															  endVec,
-															  ECC_Visibility,
-															  collisionParams);
+	bool bIsHit = world->LineTraceSingleByChannel(hitResult,
+												  startVec,
+												  endVec,
+												  ECC_Visibility,
+												  collisionParams);
 
 	if (bIsHit) {
 		//UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *hitResult.GetActor()->GetName());
@@ -114,9 +111,9 @@ auto UEngineHelper::performRaycast(AActor *actor,
 		//UE_LOG(LogTemp, Warning, TEXT("Hit Distance: %f"), this->distance);
 		//DrawDebugLine(GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
 		// 
-		if(enableDebugRay) DrawDebugPoint(actor->GetWorld(), hitResult.Location, 10, FColor::Green, false, 1);
+		if(enableDebugRay) DrawDebugPoint(world, hitResult.Location, 10, FColor::Green, false, 1);
 	}else{
-		if(enableDebugRay) DrawDebugLine(actor->GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
+		if(enableDebugRay) DrawDebugLine(world, startVec, endVec, FColor::Red, false, 1, 0, 1);
 	}
 	return bIsHit;
 }

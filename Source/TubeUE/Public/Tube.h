@@ -19,28 +19,40 @@ class TUBEUE_API ATube : public AActor{
 		inline static constexpr double maxAngle = 60.0;
 		inline static constexpr double numRotationVel = 1.0;
 		double distance, angleDeg;
+		//size_t count = 0;
 		TObjectPtr<UStaticMeshComponent> sTubeMesh;
 		TObjectPtr<UStaticMeshComponent> sHolderMesh;
 		TObjectPtr<UStaticMeshComponent> sBallMesh;
 		TObjectPtr<UPhysicsConstraintComponent> tubeJoint;
-		UPID* pidController;
+		UPID *pidControllerBall, 
+			 *pidControllerServo;
 		void initialize();
 		void performRaycast();
 		auto getDistance() -> double;
 		auto getRegulationHeight() -> double;
-		void PIDreg(float deltaTime);
+		void PIDBall(float deltaTime);
+		void PIDServo(float deltaTime);
 		void rotate(double inAngleDeg);
 	protected:
 		virtual void BeginPlay() override;
 	public:	
 		ATube();
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PID") bool bPidSwitch;
-		UPROPERTY(EditAnywhere, Category = "PID") bool bSetIdealPID;
-		UPROPERTY(EditAnywhere, Category = "PID") double P;
-		UPROPERTY(EditAnywhere, Category = "PID") double I;
-		UPROPERTY(EditAnywhere, Category = "PID") double D;
-		UPROPERTY(EditAnywhere, Category = "Settings") double inAngle = 0.0;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PID Ball") bool bPidSwitch;
+		UPROPERTY(EditAnywhere, Category = "PID Ball") bool bSetIdealBallPID;
+		UPROPERTY(EditAnywhere, Category = "PID Ball") double ballP;
+		UPROPERTY(EditAnywhere, Category = "PID Ball") double ballI;
+		UPROPERTY(EditAnywhere, Category = "PID Ball") double ballD;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PID Servo") bool bPidServoSwitch;
+		UPROPERTY(EditAnywhere, Category = "PID Servo") bool bSetIdealServoPID;
+		UPROPERTY(EditAnywhere, Category = "PID Servo") double servoP = 2.0;
+		UPROPERTY(EditAnywhere, Category = "PID Servo") double servoI = 1.0;
+		UPROPERTY(EditAnywhere, Category = "PID Servo") double servoD = 1.6;
+		UPROPERTY(EditAnywhere, Category = "Settings") double inAngle = 45.0;
 		UPROPERTY(EditAnywhere, Category = "Settings") double desiredHeight;
+		UPROPERTY(EditAnywhere, Category = "Settings") double saturationLimitBallMin = 0.0;
+		UPROPERTY(EditAnywhere, Category = "Settings") double saturationLimitBallMax = 10.0;
+		UPROPERTY(EditAnywhere, Category = "Settings") double saturationLimitServoMin = -1000.0;
+		UPROPERTY(EditAnywhere, Category = "Settings") double saturationLimitServoMax = 1000.0;
 		//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Joint") class UPhysicsConstraintComponent* tubeJoint;
 		virtual void Tick(float DeltaTime) override;
 };

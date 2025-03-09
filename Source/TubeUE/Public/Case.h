@@ -10,8 +10,6 @@ class TUBEUE_API ACase : public AActor
 	GENERATED_BODY()
 	private:
 		static constexpr size_t displaySize = 5;
-		int displayUpNumBefore,
-			displayDownNumBefore;
 		typedef struct matElementData {
 			bool bSwitch;
 			int slot;
@@ -22,7 +20,12 @@ class TUBEUE_API ACase : public AActor
 		MatElementData blueButton,
 						greenButton, 
 						redButton, 
-						yellowButton;
+						yellowButton,
+						leftGreenLed,
+						middleGreenLed,
+						rightGreenLed,
+						leftRedKnob,
+						rightRedKnob;
 		TArray<MatElementData> sevenSegOne, sevenSegTwo;
 		TArray<TArray<MatElementData>> displayUp, displayDown;
 		void initSegArray(TArray<MatElementData>& segArray, 
@@ -37,9 +40,7 @@ class TUBEUE_API ACase : public AActor
 		void numToSegments(const int &num, TArray<MatElementData>& segArray);
 		void numToDisplay(const int& num, TArray<TArray<MatElementData>>& display);
 		void renderSegArray(const TArray<MatElementData>& segArray);
-		void renderDisplay(const TArray<TArray<MatElementData>> &display,
-						   int& oldNum,
-						   const int& newNum);
+		void renderDisplay(const TArray<TArray<MatElementData>> &display);
 		void clearSegArray(const TArray<MatElementData>& segArray);
 		void clearDisplay(const TArray<TArray<MatElementData>>& display);
 		void renderMaterials();
@@ -54,6 +55,11 @@ class TUBEUE_API ACase : public AActor
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Buttons") bool bRedButton;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Buttons") bool bGreenButton;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Buttons") bool bYellowButton;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LEDs") bool bLeftGreenLed;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LEDs") bool bMiddleGreenLed;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LEDs") bool bRightGreenLed;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Knobs") bool bRightRedKnob;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Knobs") bool bLeftRedKnob;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SevenSegDisplays") int sevenSegOneNum;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SevenSegDisplays") int sevenSegTwoNum;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Displays") int displayUpNum;

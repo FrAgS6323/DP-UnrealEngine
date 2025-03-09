@@ -27,7 +27,8 @@ class TUBEUE_API UEngineHelper : public UObject {
 									float swing2LimitAngle,
 									EAngularConstraintMotion twistMotionType,
 									float twistLimitAngle);
-		static auto performRaycast(AActor *actor, 
+		static auto performRaycast(UWorld *world, 
+								   UStaticMeshComponent* mesh,
 								   FVector startOffset, 
 								   FVector rayDirection,
 								   TArray<UPrimitiveComponent*> meshesToExclude,

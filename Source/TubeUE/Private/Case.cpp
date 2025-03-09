@@ -6,25 +6,30 @@ ACase::ACase() {
 	this->RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponentCase"));
 	this->sCaseMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CaseMesh"));
 	
-	this->blueButton = {false, 45, UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/ButtonBlue")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowBlue")) };
-	this->greenButton = { false, 46, UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/ButtonGreen")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowGreen")) };
-	this->redButton = { false, 47, UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/ButtonRed")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowRed")) };
-	this->yellowButton = { false, 48, UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/ButtonYellow")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowYellow")) };
+	this->blueButton = {false, 42, UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/ButtonBlue")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowBlue")) };
+	this->greenButton = { false, 43, UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/ButtonGreen")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowGreen")) };
+	this->redButton = { false, 44, UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/ButtonRed")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowRed")) };
+	this->yellowButton = { false, 45, UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/ButtonYellow")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowYellow")) };
+	this->leftGreenLed = {false, 46,  UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/1DownGreenSvietidlo")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowGreen")) };
+	this->middleGreenLed = {false, 47, UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/2DownGreenSvietidlo")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowGreen")) };
+	this->rightGreenLed = {false, 48, UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/3DownGreenSvietidlo")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowGreen")) };
+	this->leftRedKnob = {false, 50, UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/RedLeftKnob")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowRed")) };
+	this->rightRedKnob = {false, 49, UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/RedRightKnob")), UEngineHelper::loadMaterialDynamic(TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowRed")) };
 
-	this->initSegArray(this->sevenSegOne, TArray<int>{26, 31, 30, 32, 33, 34, 35, 36}, TEXT("/Game/Models/Case/Materials/Default7Seg"), TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowSegment"));
-	this->initSegArray(this->sevenSegTwo, TArray<int>{37, 38, 40, 41, 42, 43, 44, 39}, TEXT("/Game/Models/Case/Materials/Default7Seg"), TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowSegment"));
+	this->initSegArray(this->sevenSegOne, TArray<int>{24, 28, 27, 29, 30, 31, 32, 33}, TEXT("/Game/Models/Case/Materials/Default7Seg"), TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowSegment"));
+	this->initSegArray(this->sevenSegTwo, TArray<int>{34, 35, 37, 38, 39, 40, 41, 36}, TEXT("/Game/Models/Case/Materials/Default7Seg"), TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowSegment"));
 
 	this->initDisplay(this->displayUp, 
 					  TArray<TArray<int>>{{54, 55, 56, 57, 58, 59, 60}, 
 										  {61, 62, 63, 64, 65, 66, 67}, 
 										  {68, 69, 70, 71, 72, 73, 74}, 
-										  {75, 76, 77, 78, 79, 80, 81}, 
-										  {82, 83, 84, 85, 86, 87, 88}}, 
+										  {75, 76, 77, 53, 78, 79, 80}, 
+										  {81, 82, 83, 84, 85, 86, 87}}, 
 					   TEXT("/Game/Models/Case/Materials/DefaultDisplay"), 
 					   TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowDisplayRed"));
 
 	this->initDisplay(this->displayDown,
-					  TArray<TArray<int>>{{89, 90, 91, 5, 92, 93, 94},
+					  TArray<TArray<int>>{{88, 89, 90, 5, 92, 93, 94},
 										  {95, 96, 97, 98, 99, 100, 101},
 										  {102, 103, 104, 105, 106, 107, 108},
 										  {109, 110, 111, 112, 113, 114, 115},
@@ -67,8 +72,6 @@ void ACase::initDisplay(TArray<TArray<MatElementData>> &display,
 auto ACase::numToDigits(const int& num) -> TArray<int> {
 	TArray<int> digits;
 	std::string str = std::to_string(std::abs(num));
-
-	//std::reverse(str.begin(), str.end());
 
 	for (char c : str)
 		digits.Add(c - '0');
@@ -177,6 +180,16 @@ void ACase::numToSegments(const int &num, TArray<MatElementData> &segArray){
 			segArray[6].bSwitch = true;
 		}
 			  break;
+		case -1: {
+			segArray[0].bSwitch = false;
+			segArray[1].bSwitch = false;
+			segArray[2].bSwitch = false;
+			segArray[3].bSwitch = false;
+			segArray[4].bSwitch = false;
+			segArray[5].bSwitch = false;
+			segArray[6].bSwitch = false;
+		}
+			  break;
 	}
 }
 
@@ -185,7 +198,7 @@ void ACase::numToDisplay(const int& num, TArray<TArray<MatElementData>>& display
 	int32 numOfEmptyDigits = ACase::displaySize - digits.Num();
 
 	for (size_t emptyIdx = 0; emptyIdx < numOfEmptyDigits; emptyIdx++)
-		this->clearSegArray(display[emptyIdx]);
+		this->numToSegments(-1, display[emptyIdx]);
 
 	for (int32 i = digits.Num() - 1; i >= 0; i--)
 		this->numToSegments(digits[i], display[i + numOfEmptyDigits]);
@@ -196,28 +209,9 @@ void ACase::renderSegArray(const TArray<MatElementData>& segArray){
 		segment.bSwitch ? this->sCaseMesh->SetMaterial(segment.slot, segment.matOn) : this->sCaseMesh->SetMaterial(segment.slot, segment.matOff);
 }
 
-void ACase::renderDisplay(const TArray<TArray<MatElementData>>& display, 
-						  int &oldNum, 
-						  const int &newNum){
-#if 0
-	if (oldNum != newNum) {
-		this->clearDisplay(display);
-		oldNum = newNum;
-	}
-#endif
-
+void ACase::renderDisplay(const TArray<TArray<MatElementData>>& display){
 	for (const auto& segArray : display)
 		this->renderSegArray(segArray);
-}
-
-void ACase::clearSegArray(const TArray<MatElementData>& segArray){
-	for (const auto& segment : segArray)
-		this->sCaseMesh->SetMaterial(segment.slot, segment.matOff);
-}
-
-void ACase::clearDisplay(const TArray<TArray<MatElementData>>& display){
-	for (const auto& segArray : display)
-		this->clearSegArray(segArray);
 }
 
 void ACase::renderMaterials(){
@@ -225,12 +219,17 @@ void ACase::renderMaterials(){
 	this->bRedButton ? this->sCaseMesh->SetMaterial(this->redButton.slot, this->redButton.matOn) : this->sCaseMesh->SetMaterial(this->redButton.slot, this->redButton.matOff);
 	this->bGreenButton ? this->sCaseMesh->SetMaterial(this->greenButton.slot, this->greenButton.matOn) : this->sCaseMesh->SetMaterial(this->greenButton.slot, this->greenButton.matOff);
 	this->bYellowButton ? this->sCaseMesh->SetMaterial(this->yellowButton.slot, this->yellowButton.matOn) : this->sCaseMesh->SetMaterial(this->yellowButton.slot, this->yellowButton.matOff);
+	this->bLeftGreenLed ? this->sCaseMesh->SetMaterial(this->leftGreenLed.slot, this->leftGreenLed.matOn) : this->sCaseMesh->SetMaterial(this->leftGreenLed.slot, this->leftGreenLed.matOff);
+	this->bMiddleGreenLed ? this->sCaseMesh->SetMaterial(this->middleGreenLed.slot, this->middleGreenLed.matOn) : this->sCaseMesh->SetMaterial(this->middleGreenLed.slot, this->middleGreenLed.matOff);
+	this->bRightGreenLed ? this->sCaseMesh->SetMaterial(this->rightGreenLed.slot, this->rightGreenLed.matOn) : this->sCaseMesh->SetMaterial(this->rightGreenLed.slot, this->rightGreenLed.matOff);
+	this->bRightRedKnob ? this->sCaseMesh->SetMaterial(this->rightRedKnob.slot, this->rightRedKnob.matOn) : this->sCaseMesh->SetMaterial(this->rightRedKnob.slot, this->rightRedKnob.matOff);
+	this->bLeftRedKnob ? this->sCaseMesh->SetMaterial(this->leftRedKnob.slot, this->leftRedKnob.matOn) : this->sCaseMesh->SetMaterial(this->leftRedKnob.slot, this->leftRedKnob.matOff);
 
 	this->renderSegArray(this->sevenSegOne);
 	this->renderSegArray(this->sevenSegTwo);
 
-	this->renderDisplay(this->displayUp, this->displayUpNumBefore, this->displayUpNum);
-	this->renderDisplay(this->displayDown, this->displayDownNumBefore, this->displayDownNum);
+	this->renderDisplay(this->displayUp);
+	this->renderDisplay(this->displayDown);
 }
 
 void ACase::BeginPlay(){

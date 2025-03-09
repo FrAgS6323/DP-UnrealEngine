@@ -22,8 +22,11 @@ ATube::ATube(){
     UEngineHelper::loadMeshDynamic(TEXT("/Game/Models/Holder/Holder"), this->sHolderMesh);
     UEngineHelper::loadMeshDynamic(TEXT("/Game/Models/Ball/Ball"), this->sBallMesh);
 
-    this->pidController = new UPID();
-    this->pidController->setSaturationLimits(0.0, 10.0);
+    this->pidControllerBall = new UPID();
+    //this->pidControllerBall->setSaturationLimits(this->saturationLimitBallMin, this->saturationLimitBallMax);
+
+    this->pidControllerServo = new UPID();
+    //this->pidControllerServo->setSaturationLimits(this->saturationLimitServoMin, this->saturationLimitServoMax);
 
     this->initialize();
 }
@@ -99,44 +102,45 @@ auto ATube::getRegulationHeight() -> double {
 void ATube::performRaycast() {
         //distanceFromTubeOriginToBottom = (this->height - this->motorHeight - this->upperHeight) / 2,
     double angleDegToSplit = 0,
-        raycastDistanceFromOriginY = 0,
-        raycastDistanceFromOriginZ = ATube::halfTubeHeight; //distanceFromTubeOriginToBottom;
-    FVector tubePos = this->sTubeMesh->GetComponentLocation(),
-            raycastPos(tubePos.X, tubePos.Y, tubePos.Z);
+        actualAngle = this->sTubeMesh->GetComponentRotation().Roll,
+        raycastDistanceFromOriginX = 0,
+        raycastDistanceFromOriginY = ATube::halfTubeHeight; //distanceFromTubeOriginToBottom;
+    FVector raycastPos(0, 0, 0);
 
-    if (0 != this->angleDeg) {
-        if (this->angleDeg > 0) angleDegToSplit = 360 - this->angleDeg;
-        else angleDegToSplit = 180 + abs(this->angleDeg);
+    if (0 != actualAngle) {
+        if (actualAngle > 0) angleDegToSplit = 360 - actualAngle; //360
+        else angleDegToSplit = 180 + abs(actualAngle); //180
 
-        raycastDistanceFromOriginY = ATube::halfTubeHeight * cos(UEngineHelper::degToRad(angleDegToSplit));
-        raycastDistanceFromOriginZ = ATube::halfTubeHeight * sin(UEngineHelper::degToRad(angleDegToSplit));
+        raycastDistanceFromOriginX = ATube::halfTubeHeight * cos(UEngineHelper::degToRad(angleDegToSplit));
+        raycastDistanceFromOriginY = ATube::halfTubeHeight * sin(UEngineHelper::degToRad(angleDegToSplit));
 
-        raycastPos.Y = tubePos.Y + raycastDistanceFromOriginY;
-
-        raycastPos.Z = tubePos.Z - abs(raycastDistanceFromOriginZ);
+        //raycastPos.Z = actualAngle > 0 ? raycastDistanceFromOriginX : -raycastDistanceFromOriginX;
+        raycastPos.Z = raycastDistanceFromOriginX;
+        raycastPos.Y = -abs(raycastDistanceFromOriginY);
+    }else{
+        raycastPos.Y = -ATube::halfTubeHeight;
     }
-    else{
-        raycastPos.Z = tubePos.Z - raycastDistanceFromOriginZ;
-    }
 
-#if 0
-    UEngineHelper::performRaycast(this,
-        FVector(-tubePos.X,
-            tubePos.Y,
-            tubePos.Z),
+    UE_LOG(LogTemp, Warning, TEXT("sTube loc: %f, %f, %f"), this->sTubeMesh->GetComponentLocation().X, this->sTubeMesh->GetComponentLocation().Y, this->sTubeMesh->GetComponentLocation().Z);
+    UE_LOG(LogTemp, Warning, TEXT("raycastStartLoc: %f, %f, %f"), raycastPos.X, raycastPos.Y, raycastPos.Z);
+
+//#if 0
+    UEngineHelper::performRaycast(this->GetWorld(),
+        this->sTubeMesh,
+        raycastPos,
         this->sTubeMesh->GetUpVector(),
-        meshesToExclude,
+        {this->sTubeMesh},
         true,
-        rayLength,
+        ATube::halfTubeHeight * 2,
         this->distance);
 
-#endif
+//#endif
     //FVector tubePos = this->sTubeMesh->GetRelativeLocation(),
 #if 0
         startVec = FVector(tubePos.X,
             tubePos.Y,
             tubePos.Z - ATube::halfTubeHeight),
-#endif
+
     FVector endVec = ((this->sTubeMesh->GetUpVector() * 50.0f) + raycastPos);
 
     FHitResult hitResult;
@@ -163,24 +167,41 @@ void ATube::performRaycast() {
     else {
         DrawDebugLine(GetWorld(), raycastPos, endVec, FColor::Red, false, 1, 0, 1);
     }
+#endif
 }
 
-void ATube::PIDreg(float deltaTime) {
+void ATube::PIDBall(float deltaTime) {
     if ((this->desiredHeight > this->getRegulationHeight()) ||
         (this->desiredHeight < 0))
         UE_LOG(LogTemp, Warning, TEXT("Wrong input! (Expected between 0 and %f)"), this->getRegulationHeight());
 
     if (!this->bPidSwitch) return;
 
-    if (!this->pidController) UE_LOG(LogTemp, Warning, TEXT("UPID not initialized!"));
+    if (!this->pidControllerBall) UE_LOG(LogTemp, Warning, TEXT("UPID for ball not initialized!"));
 
     double error = UPID::estimateError(this->desiredHeight, this->distance),
            //output = this->pidController->getPIDOutput(error, (double)deltaTime);
-           output = this->pidController ? this->pidController->getPIDOutput(error, (double)deltaTime) : 0;
+           output = this->pidControllerBall ? this->pidControllerBall->getPIDOutput(error, (double)deltaTime) : 0;
     
-    UE_LOG(LogTemp, Warning, TEXT("PIDerror: = %f"), error);
-    UE_LOG(LogTemp, Warning, TEXT("PIDoutput: = %f"), output);
+    UE_LOG(LogTemp, Warning, TEXT("PID Ball error: = %f"), error);
+    UE_LOG(LogTemp, Warning, TEXT("PID Ball output: = %f"), output);
     if (this->sBallMesh) this->sBallMesh->AddForce(FVector(0, 0, output));
+}
+
+void ATube::PIDServo(float deltaTime) {
+    if (std::abs(this->inAngle) > this->maxAngle) UE_LOG(LogTemp, Warning, TEXT("Wrong angle! (Expected between -%f and %f)"), this->maxAngle, this->maxAngle);
+
+    if (!this->bPidServoSwitch) return;
+
+    if (!this->pidControllerServo) UE_LOG(LogTemp, Warning, TEXT("UPID for servo not initialized!"));
+
+    FRotator currentRotation = this->sTubeMesh->GetComponentRotation();
+    double error = UPID::estimateError(this->inAngle, currentRotation.Roll),
+        output = this->pidControllerServo ? this->pidControllerServo->getPIDOutput(error, (double)deltaTime) : 0;
+
+    UE_LOG(LogTemp, Warning, TEXT("PID Servo error: = %f"), error);
+    UE_LOG(LogTemp, Warning, TEXT("PID Servo output: = %f"), output);
+    if (this->sTubeMesh) this->sTubeMesh->AddTorqueInRadians(FVector(output, 0.0, 0.0), NAME_None, false);
 }
 
 void ATube::rotate(double inAngleDeg){
@@ -190,9 +211,10 @@ void ATube::rotate(double inAngleDeg){
     double roundCurrRotation = round(currentRotation.Roll),
            deltaAngleDeg = inAngleDeg - roundCurrRotation;
 
-    if (deltaAngleDeg < 0 && roundCurrRotation != inAngleDeg) this->angleDeg -= this->numRotationVel;
-    else if (deltaAngleDeg > 0 && roundCurrRotation != inAngleDeg) this->angleDeg += this->numRotationVel;
-
+    if (inAngleDeg != this->angleDeg) {
+        if (deltaAngleDeg < 0 && roundCurrRotation != inAngleDeg) this->angleDeg -= this->numRotationVel;
+        else if (deltaAngleDeg > 0 && roundCurrRotation != inAngleDeg) this->angleDeg += this->numRotationVel;
+    }
     UE_LOG(LogTemp, Warning, TEXT("AngleDeg: %f currRotRoll: %f  roundCurrRotation: %f delta: %f"), this->angleDeg, currentRotation.Roll, roundCurrRotation, deltaAngleDeg);
 
     FRotator newRotation = FRotator(currentRotation.Pitch,
@@ -206,6 +228,8 @@ void ATube::rotate(double inAngleDeg){
 
 void ATube::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
+
+    this->SetActorTickInterval(-10000.0f);
 
     //UE_LOG(LogTemp, Warning, TEXT("Tube absolute location: %s"), this->sTubeMesh->IsUsingAbsoluteLocation() ? TEXT("True") : TEXT("False"));
     constexpr double rayLength = 50.0;
@@ -225,16 +249,29 @@ void ATube::Tick(float DeltaTime){
 
     //if (this->distance > 0) UE_LOG(LogTemp, Warning, TEXT("Tube hit distance: %ld"), this->distance);
     
-    this->bSetIdealPID 
+    this->bSetIdealBallPID
         ? 
-        this->pidController->setIdealPIDvalues() 
+        this->pidControllerBall->setIdealPIDvalues() 
         : 
-        this->pidController->setPIDvalues(this->P,
-                                          this->I,
-                                          this->D);
-    this->PIDreg(DeltaTime);
-    this->rotate(this->inAngle);
+        this->pidControllerBall->setPIDvalues(this->ballP,
+                                              this->ballI,
+                                              this->ballD);
+
+    this->bSetIdealServoPID
+        ?
+        this->pidControllerServo->setIdealPIDvalues()
+        :
+        this->pidControllerServo->setPIDvalues(this->servoP,
+                                               this->servoI,
+                                               this->servoD);
+    this->pidControllerBall->setSaturationLimits(this->saturationLimitBallMin, this->saturationLimitBallMax);
+    this->pidControllerServo->setSaturationLimits(this->saturationLimitServoMin, this->saturationLimitServoMax);
+
+    this->PIDBall(DeltaTime);
+    this->PIDServo(DeltaTime);
+    //this->rotate(this->inAngle);
     this->performRaycast();
+    //UE_LOG(LogTemp, Warning, TEXT("count: = %d"), this->count++);
 }
 
 #if 0
