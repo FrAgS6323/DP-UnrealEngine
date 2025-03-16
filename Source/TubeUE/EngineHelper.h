@@ -37,6 +37,7 @@ class TUBEUE_API UEngineHelper : public UObject {
 								   double& hitDistance) -> bool;
 
 		static auto degToRad(double deg) -> double;
+		static auto radToDeg(double rad) -> double;
 
 		template<typename T>
 		static auto spawnActor(UWorld* world,

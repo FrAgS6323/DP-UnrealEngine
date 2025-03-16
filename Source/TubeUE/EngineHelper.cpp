@@ -1,6 +1,7 @@
 #include "EngineHelper.h"
 #include "Math/UnrealMathUtility.h"
 #include "Kismet/GameplayStatics.h"
+#include <numbers>
 
 void UEngineHelper::loadMeshStatic(const TCHAR* path, UStaticMeshComponent* parentComp){
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> meshAsset(path);
@@ -118,6 +119,10 @@ auto UEngineHelper::performRaycast(UWorld *world,
 	return bIsHit;
 }
 
-auto UEngineHelper::degToRad(double deg)->double {
+auto UEngineHelper::degToRad(double deg) -> double {
 		return (deg * PI) / 180;
+}
+
+auto UEngineHelper::radToDeg(double rad) -> double {
+	return (rad * 180) / std::numbers::pi;
 }

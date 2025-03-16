@@ -1,16 +1,17 @@
 #include "PID.h"
 
-UPID::UPID():
+UPID::UPID(ePIDusage usage):
 	clamp(false),
+	usage(usage),
 	p(0.0),
 	i(0.0),
 	d(0.0),
-	kP(UPID::idealP),
-	kI(UPID::idealI),
-	kD(UPID::idealD),
 	saturationLimitMin(0.0),
 	saturationLimitMax(0.0){
 	//PrimaryComponentTick.bCanEverTick = true;
+	this->kP = ePIDusage::HEIGHT == this->usage ? UPID::idealPBall : UPID::idealPServo,
+	this->kI = ePIDusage::HEIGHT == this->usage ? UPID::idealIBall : UPID::idealIServo,
+	this->kD = ePIDusage::HEIGHT == this->usage ? UPID::idealDBall : UPID::idealDServo;
 }
 
 #if 0
@@ -46,13 +47,16 @@ void UPID::setSaturationLimits(double min, double max){
 }
 
 bool UPID::setIdealPIDvalues() {
-	bool change = this->detectChange(UPID::idealP,
-									 UPID::idealI,
-									 UPID::idealD);
+	double idealP = ePIDusage::HEIGHT == this->usage ? UPID::idealPBall : UPID::idealPServo,
+		   idealI = ePIDusage::HEIGHT == this->usage ? UPID::idealIBall : UPID::idealIServo,
+		   idealD = ePIDusage::HEIGHT == this->usage ? UPID::idealDBall : UPID::idealDServo;
+	bool change = this->detectChange(idealP,
+									 idealI,
+									 idealD);
 	if (change) {
-		this->kP = UPID::idealP;
-		this->kI = UPID::idealI;
-		this->kD = UPID::idealD;
+		this->kP = idealP;
+		this->kI = idealI;
+		this->kD = idealD;
 	}
 	return change;
 }
