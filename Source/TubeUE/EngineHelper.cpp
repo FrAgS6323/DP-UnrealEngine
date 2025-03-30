@@ -2,6 +2,8 @@
 #include "Math/UnrealMathUtility.h"
 #include "Kismet/GameplayStatics.h"
 #include <numbers>
+#include "GameFramework/SpectatorPawn.h"
+#include "GameFramework/FloatingPawnMovement.h"
 
 void UEngineHelper::loadMeshStatic(const TCHAR* path, UStaticMeshComponent* parentComp){
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> meshAsset(path);
@@ -125,4 +127,28 @@ auto UEngineHelper::degToRad(double deg) -> double {
 
 auto UEngineHelper::radToDeg(double rad) -> double {
 	return (rad * 180) / std::numbers::pi;
+}
+
+auto UEngineHelper::findActorsOfClass(const UObject* worldContextObject, TSubclassOf<AActor> actorClass, size_t index) -> TObjectPtr<AActor> {
+	TArray<AActor*> foundActors;
+	TObjectPtr<AActor> outActor;
+	UGameplayStatics::GetAllActorsOfClass(worldContextObject, actorClass, foundActors);
+
+	if (foundActors.Num() > 0) {
+		outActor = foundActors[index];
+		//UE_LOG(LogTemp, Warning, TEXT("tube initialized in level!"));
+	}
+	else {
+		//UE_LOG(LogTemp, Warning, TEXT("tube NOT initialized in level!"));
+	}
+	return outActor;
+}
+
+void UEngineHelper::setSpectatorCameraSpeed(APlayerController* playerController, float speed){
+	ASpectatorPawn* spectatorPawn = Cast<ASpectatorPawn>(playerController->GetPawn());
+
+	if (spectatorPawn){
+		UFloatingPawnMovement* MoveComp = spectatorPawn->FindComponentByClass<UFloatingPawnMovement>();
+		if (MoveComp) MoveComp->MaxSpeed = speed;
+	}
 }

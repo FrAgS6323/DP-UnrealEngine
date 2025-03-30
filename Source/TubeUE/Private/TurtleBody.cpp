@@ -1,7 +1,6 @@
 #include "TurtleBody.h"
 #include "../EngineHelper.h"
 
-// Sets default values
 ATurtleBody::ATurtleBody() {
     PrimaryActorTick.bCanEverTick = true;
     this->RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponentTurtlebot"));
@@ -43,7 +42,6 @@ ATurtleBody::ATurtleBody() {
 }
 
 void ATurtleBody::initialize(){
-    //this->sLeftWheelMesh->SetWorldLocation(this->GetActorLocation() + FVector(6.25, -15, 0));
     this->sLeftWheelMesh->SetRelativeLocation(FVector(6.25, -15.5, 0));
     this->leftWheelJoint->SetRelativeLocation(this->sLeftWheelMesh->GetRelativeLocation());
     this->sRightWheelMesh->SetRelativeLocation(FVector(6.25, 15.5, 0));
@@ -122,7 +120,6 @@ void ATurtleBody::initialize(){
             EAngularConstraintMotion::ACM_Free, 0.0f,
             EAngularConstraintMotion::ACM_Free, 0.0f,
             EAngularConstraintMotion::ACM_Free, 0.0f);
-//#if 0
 
         UEngineHelper::setupConstraint(this->lidarBottomJoint,
             this->sBodyMesh,
@@ -145,8 +142,7 @@ void ATurtleBody::initialize(){
             EAngularConstraintMotion::ACM_Free, 0.0f,
             EAngularConstraintMotion::ACM_Locked, 0.0f,
             EAngularConstraintMotion::ACM_Locked, 0.0f);
-//#endif
-//#if 0
+
         this->sLeftWheelMesh->SetMobility(EComponentMobility::Movable);
         this->sLeftWheelMesh->SetMassOverrideInKg(NAME_None, 0.2f, true);
         this->sLeftWheelMesh->BodyInstance.bAutoWeld = false;
@@ -162,7 +158,7 @@ void ATurtleBody::initialize(){
         this->sRightBallMesh->SetMobility(EComponentMobility::Movable);
         this->sRightBallMesh->SetMassOverrideInKg(NAME_None, 0.1f, true);
         this->sRightBallMesh->BodyInstance.bAutoWeld = false;
-//#endif
+
         this->sLidarBottomMesh->SetMobility(EComponentMobility::Movable);
         this->sLidarBottomMesh->SetMassOverrideInKg(NAME_None, 0.2f, true);
         this->sLidarBottomMesh->BodyInstance.bAutoWeld = false;
@@ -172,17 +168,9 @@ void ATurtleBody::initialize(){
         this->sLidarTopMesh->BodyInstance.bAutoWeld = false;
     }
 }
-#if 0
-void ATurtleBody::OnConstruction(const FTransform& Transform){
-    Super::OnConstruction(Transform);
-    this->initialize();
-}
-#endif
 
-// Called when the game starts or when spawned
 void ATurtleBody::BeginPlay(){
     Super::BeginPlay();
-    //UE_LOG(LogTemp, Warning, TEXT("Begin Play called!"));
 }
 
 void ATurtleBody::rotateWheel(UStaticMeshComponent* wheel, double direction){
@@ -207,10 +195,12 @@ void ATurtleBody::moveLR(float value){
 }
 
 void ATurtleBody::moveRobot(float value){
-    if (this->bForward) this->moveFB(value);
-    else if (this->bBackward) this->moveFB(-value);
-    else if (this->bTurnLeft) this->moveLR(-value);
-    else if (this->bTurnRight) this->moveLR(value);
+    if (!this->playerController) return;
+    
+    if (this->playerController->IsInputKeyDown(EKeys::W)) this->moveFB(value);
+    else if (this->playerController->IsInputKeyDown(EKeys::S)) this->moveFB(-value);
+    else if (this->playerController->IsInputKeyDown(EKeys::A)) this->moveLR(-value);
+    else if (this->playerController->IsInputKeyDown(EKeys::D)) this->moveLR(value);
 }
 
 void ATurtleBody::turnLidar(double direction, bool bRaycast){
@@ -228,24 +218,20 @@ void ATurtleBody::turnLidar(double direction, bool bRaycast){
                                       bRaycast,
                                       rayLength,
                                       hitDistance);
-            //if(hitDistance > 0) UE_LOG(LogTemp, Warning, TEXT("Lidar hit distance: %ld"), hitDistance);
     }
     this->sLidarTopMesh->SetPhysicsAngularVelocityInDegrees(worldAngularVelocity, false);
 }
 
-void ATurtleBody::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent){
-    Super::SetupPlayerInputComponent(PlayerInputComponent);
-    
-    PlayerInputComponent->BindAxis("MoveFB", this, &ATurtleBody::moveFB);
-    PlayerInputComponent->BindAxis("MoveLR", this, &ATurtleBody::moveLR);
+void ATurtleBody::setActive(APlayerController* inPlayerController, bool bActive){
+    this->bIsActive = bActive;
+    this->playerController = this->bIsActive ? inPlayerController : nullptr;
+    UE_LOG(LogTemp, Warning, TEXT("Turtle now active!"));
 }
 
-// Called every frame
 void ATurtleBody::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
-    this->moveRobot(0.5);
+    this->moveRobot(2.5);
+    if(this->playerController && this->playerController->WasInputKeyJustReleased(EKeys::E)) this->bLidar = !this->bLidar;
 
-    //this->rotateWheel(this->sLeftWheelMesh, 0.5f);
-    //this->rotateWheel(this->sRightWheelMesh, -0.5f);
-    this->bTurnLidar ? this->turnLidar(0.5f, true) : this->turnLidar(0.0f, false);
+    this->bLidar ? this->turnLidar(0.5f, true) : this->turnLidar(0.0f, false);
 }

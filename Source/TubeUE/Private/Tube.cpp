@@ -1,7 +1,10 @@
-#include "Tube.h"
-#include <numbers>
+﻿#include "Tube.h"
 #include "../EngineHelper.h"
 #include "PID.h"
+#include "Json.h"
+#include <numbers>
+#include <Kismet/GameplayStatics.h>
+#include "Kismet/KismetMathLibrary.h"
 
 ATube::ATube(){
 	PrimaryActorTick.bCanEverTick = true;
@@ -24,28 +27,111 @@ ATube::ATube(){
     UEngineHelper::loadMeshDynamic(TEXT("/Game/Models/Ball/Ball"), this->sBallMesh);
 
     this->pidControllerBall = new UPID(ePIDusage::HEIGHT);
-    //this->pidControllerBall->setSaturationLimits(this->saturationLimitBallMin, this->saturationLimitBallMax);
-
     this->pidControllerServo = new UPID(ePIDusage::ANGLE);
-    //this->pidControllerServo->setSaturationLimits(this->saturationLimitServoMin, this->saturationLimitServoMax);
 
     this->initialize();
+
+#if 0
+    TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> functor = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
+        this->funcForWebHandler(request, response, connected);
+        };
+#endif
+
+    this->webHandler = new WebHandler(TEXT("http://147.232.60.231:5001/tubeDataAPI"), WebHandler::eRequestType::GET);
+    //this->webHandler->setFunctorOnProcessRequestComplete(this, functor);
 }
 
 void ATube::BeginPlay(){
 	Super::BeginPlay();
-#if 0
-	FVector meshBounds = this->sTubeMesh->Bounds.BoxExtent;
-	FVector centerOfMassOffset = FVector(0.0f, 0.0f, -meshBounds.Z);
 
-	this->sTubeMesh->SetCenterOfMass(centerOfMassOffset, NAME_None);
+//#if 0
+    if (!this->widgetComponent) {
+        TArray<UWidgetComponent*> WidgetComponents;
+        GetComponents<UWidgetComponent>(WidgetComponents);
+
+        for (UWidgetComponent* WidgetComp : WidgetComponents)
+        {
+            if (WidgetComp->GetName() == TEXT("WidgetForTube"))
+            {
+                this->widgetComponent = WidgetComp;
+                UUserWidget* homeWidget = Cast<UUserWidget>(widgetComponent->GetUserWidgetObject());
+
+                if (homeWidget){
+                    this->widgetSwitcher = Cast<UWidgetSwitcher>(homeWidget->GetWidgetFromName(TEXT("WidgetSwitcher")));
+
+                    UButton* buttonSim = Cast<UButton>(homeWidget->GetWidgetFromName(TEXT("SimulationButton")));
+                    buttonSim->OnClicked.AddDynamic(this, &ATube::bindOnButtonSimClick);
+
+                    UButton* buttonViz = Cast<UButton>(homeWidget->GetWidgetFromName(TEXT("VisualizationButton")));
+                    buttonViz->OnClicked.AddDynamic(this, &ATube::bindOnButtonVizClick);
+
+                    UButton* buttonSimIRL = Cast<UButton>(homeWidget->GetWidgetFromName(TEXT("SimInRealTimeButton")));
+                    buttonSimIRL->OnClicked.AddDynamic(this, &ATube::bindOnButtonSimIRLClick);
+
+                    UCheckBox* pidCheckBox = Cast<UCheckBox>(homeWidget->GetWidgetFromName(TEXT("bPID")));
+                    pidCheckBox->OnCheckStateChanged.AddDynamic(this, &ATube::bindOnRegCheckboxChange);
+
+                    UCheckBox* idealPIDCheckBox = Cast<UCheckBox>(homeWidget->GetWidgetFromName(TEXT("bIdealPID")));
+                    idealPIDCheckBox->OnCheckStateChanged.AddDynamic(this, &ATube::bindOnidealPIDCheckboxChange);
+
+                    UCheckBox* bCoordCheckBox = Cast<UCheckBox>(homeWidget->GetWidgetFromName(TEXT("bCoord")));
+                    bCoordCheckBox->OnCheckStateChanged.AddDynamic(this, &ATube::bindOnidealCoordsCheckboxChange);
+
+                    UEditableTextBox* editableBoxHeight = Cast<UEditableTextBox>(homeWidget->GetWidgetFromName(TEXT("HeightInput")));
+                    editableBoxHeight->OnTextCommitted.AddDynamic(this, &ATube::bindOnTextCommitHeight);
+
+                    UEditableTextBox* editableBoxAngle = Cast<UEditableTextBox>(homeWidget->GetWidgetFromName(TEXT("AngleInput")));
+                    editableBoxAngle->OnTextCommitted.AddDynamic(this, &ATube::bindOnTextCommitAngle);
+
+                    UEditableTextBox* editableBoxXInput = Cast<UEditableTextBox>(homeWidget->GetWidgetFromName(TEXT("XInput")));
+                    editableBoxXInput->OnTextCommitted.AddDynamic(this, &ATube::bindOnTextCommitX);
+
+                    UEditableTextBox* editableBoxYInput = Cast<UEditableTextBox>(homeWidget->GetWidgetFromName(TEXT("YInput")));
+                    editableBoxYInput->OnTextCommitted.AddDynamic(this, &ATube::bindOnTextCommitY);
+
+                    UEditableTextBox* editableBoxBallP= Cast<UEditableTextBox>(homeWidget->GetWidgetFromName(TEXT("ballPInput")));
+                    editableBoxBallP->OnTextCommitted.AddDynamic(this, &ATube::bindOnTextCommitP);
+
+                    UEditableTextBox* editableBoxBallI = Cast<UEditableTextBox>(homeWidget->GetWidgetFromName(TEXT("ballIInput")));
+                    editableBoxBallI->OnTextCommitted.AddDynamic(this, &ATube::bindOnTextCommitI);
+
+                    UEditableTextBox* editableBoxBallD = Cast<UEditableTextBox>(homeWidget->GetWidgetFromName(TEXT("ballDInput")));
+                    editableBoxBallD->OnTextCommitted.AddDynamic(this, &ATube::bindOnTextCommitD);
+                }
+                break;
+            }
+        }
+        if (!this->widgetComponent) {
+            UE_LOG(LogTemp, Warning, TEXT("WidgetTube not initialized!"));
+            return;
+        }
+        else {
+            UE_LOG(LogTemp, Warning, TEXT("WidgetTube correctly initialized!"));
+        }
+    }
+//#endif
+}
+
+void ATube::funcForWebHandler(FHttpRequestPtr request, FHttpResponsePtr response, bool connected){
+    this->reqData.request = request;
+    this->reqData.response = response;
+    this->reqData.connected = connected;
+
+#if 0
+    TSharedPtr<FJsonObject> responseObj;
+    TSharedRef<TJsonReader<>> jsonReader = TJsonReaderFactory<>::Create(response->GetContentAsString());
+    FJsonSerializer::Deserialize(jsonReader, responseObj);
+
+    //UE_LOG(LogTemp, Warning, TEXT("response: %s"), *this->reqData.response->GetContentAsString());
+    UE_LOG(LogTemp, Warning, TEXT("parsed-> target: %s"), *responseObj->GetStringField("target"));
 #endif
+
 }
 
 void ATube::initialize(){
-    constexpr double ballRadius = 0.015;
+    constexpr double ballRadius = 1.5;
     this->sTubeMesh->SetRelativeLocation(FVector(6.0, 0, 0));
-    this->sBallMesh->SetRelativeLocation(FVector(0, 0, -ATube::halfTubeHeight + (ballRadius * 4)));
+    this->sBallMesh->SetRelativeLocation(FVector(0, 0, -ATube::halfTubeHeight + ballRadius));
 
     this->sHolderMesh->SetSimulatePhysics(true);
     this->sTubeMesh->SetSimulatePhysics(true);
@@ -130,7 +216,7 @@ void ATube::performRaycast() {
                                                raycastPos,
                                                this->sTubeMesh->GetUpVector(),
                                                {this->sTubeMesh},
-                                               true,
+                                               false,
                                                ATube::halfTubeHeight * 2,
                                                this->distance);
 }
@@ -177,11 +263,10 @@ void ATube::PIDBall(float deltaTime) {
     if (!this->bPidBallSwitch) return;
 
     double error = UPID::estimateError(this->desiredHeight, this->distance),
-           //output = this->pidController->getPIDOutput(error, (double)deltaTime);
            output = this->pidControllerBall ? this->pidControllerBall->getPIDOutput(error, (double)deltaTime) : 0;
     
-    UE_LOG(LogTemp, Warning, TEXT("PID Ball error: = %f"), error);
-    UE_LOG(LogTemp, Warning, TEXT("PID Ball output: = %f"), output);
+    //UE_LOG(LogTemp, Warning, TEXT("PID Ball error: = %f"), error);
+    //UE_LOG(LogTemp, Warning, TEXT("PID Ball output: = %f"), output);
     if (this->sBallMesh && this->bHit) this->sBallMesh->AddForce(this->splitBallForce(output, this->sTubeMesh->GetComponentRotation().Roll));
 }
 
@@ -286,10 +371,104 @@ void ATube::convertHeightAngleToXY(double inHeight,
     yOut = y;
 }
 
+void ATube::rotateWidgetToFaceCamera() {
+    if (!this->widgetComponent) return;
+
+    FVector CameraLocation = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->GetCameraLocation();
+    FVector WidgetLocation = this->widgetComponent->GetComponentLocation();
+
+    FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(WidgetLocation, CameraLocation);
+    LookAtRotation.Pitch = 0.f;
+    LookAtRotation.Roll = 0.f; 
+    this->widgetComponent->SetWorldRotation(LookAtRotation);
+}
+
+void ATube::bindOnButtonSimClick() {
+    this->mode = ERunningModesTube::SIMULATION;
+    if (this->widgetSwitcher) this->widgetSwitcher->SetActiveWidgetIndex(0);
+}
+
+void ATube::bindOnButtonVizClick() {
+    this->mode = ERunningModesTube::VISUALIZATION;
+    if (this->widgetSwitcher) this->widgetSwitcher->SetActiveWidgetIndex(1);
+}
+
+void ATube::bindOnButtonSimIRLClick() {
+    this->mode = ERunningModesTube::SIM_IN_REAL_TIME;
+    if(this->widgetSwitcher) this->widgetSwitcher->SetActiveWidgetIndex(2);
+}
+
+void ATube::bindOnRegCheckboxChange(bool bIsChecked) {
+    this->bPidBallSwitch = bIsChecked;
+}
+
+void ATube::bindOnidealPIDCheckboxChange(bool bIsChecked) {
+    this->bSetIdealBallPID = bIsChecked;
+}
+
+void ATube::bindOnidealCoordsCheckboxChange(bool bIsChecked) {
+    this->bCoords = bIsChecked;
+}
+
+void ATube::bindOnTextCommitHeight(const FText& Text, ETextCommit::Type CommitType){
+    if (CommitType == ETextCommit::OnEnter){
+        FString EnteredText = Text.ToString().TrimStartAndEnd();
+        LexTryParseString(this->setDesiredHeight, *EnteredText);
+    }
+}
+
+void ATube::bindOnTextCommitAngle(const FText& Text, ETextCommit::Type CommitType) {
+    if (CommitType == ETextCommit::OnEnter){
+        FString EnteredText = Text.ToString().TrimStartAndEnd();
+        LexTryParseString(this->setAngle, *EnteredText);
+    }
+}
+
+void ATube::bindOnTextCommitX(const FText& Text, ETextCommit::Type CommitType) {
+    if (CommitType == ETextCommit::OnEnter) {
+        FString EnteredText = Text.ToString().TrimStartAndEnd();
+        LexTryParseString(this->xBallPos, *EnteredText);
+    }
+}
+
+void ATube::bindOnTextCommitY(const FText& Text, ETextCommit::Type CommitType) {
+    if (CommitType == ETextCommit::OnEnter) {
+        FString EnteredText = Text.ToString().TrimStartAndEnd();
+        LexTryParseString(this->yBallPos, *EnteredText);
+    }
+}
+
+void ATube::bindOnTextCommitP(const FText& Text, ETextCommit::Type CommitType) {
+    if (CommitType == ETextCommit::OnEnter) {
+        FString EnteredText = Text.ToString().TrimStartAndEnd();
+        LexTryParseString(this->ballP, *EnteredText);
+    }
+}
+
+void ATube::bindOnTextCommitI(const FText& Text, ETextCommit::Type CommitType) {
+    if (CommitType == ETextCommit::OnEnter) {
+        FString EnteredText = Text.ToString().TrimStartAndEnd();
+        LexTryParseString(this->ballI, *EnteredText);
+    }
+}
+
+void ATube::bindOnTextCommitD(const FText& Text, ETextCommit::Type CommitType) {
+    if (CommitType == ETextCommit::OnEnter) {
+        FString EnteredText = Text.ToString().TrimStartAndEnd();
+        LexTryParseString(this->ballD, *EnteredText);
+    }
+}
+
+void ATube::setActive(bool bActive){
+    this->bIsActive = bActive;
+    UE_LOG(LogTemp, Warning, TEXT("Tube now active!"));
+}
+
 void ATube::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
 
-    this->SetActorTickInterval(-10.0f);
+    this->widgetComponent->SetVisibility(this->bIsActive);
+    //this->SetActorTickInterval(-10.0f);
     
     this->bSetIdealBallPID
         ? 
@@ -299,34 +478,53 @@ void ATube::Tick(float DeltaTime){
                                               this->ballI,
                                               this->ballD);
 
-    this->bSetIdealServoPID
-        ?
-        this->pidControllerServo->setIdealPIDvalues()
-        :
         this->pidControllerServo->setPIDvalues(this->servoP,
                                                this->servoI,
                                                this->servoD);
     this->pidControllerBall->setSaturationLimits(this->saturationLimitBallMin, this->saturationLimitBallMax);
     this->pidControllerServo->setSaturationLimits(this->saturationLimitServoMin, this->saturationLimitServoMax);
 
-    this->performRaycast();
+    if (ERunningModesTube::SIMULATION == this->mode) {
+        this->performRaycast();
 
-    if (!this->bCoords) {
-        this->desiredHeight = this->setDesiredHeight;
-        this->angle = this->setAngle;        
-    }else{
-        this->bPidBallSwitch = true;
-        this->convertXYToHeightAngle(this->xBallPos, 
-                                     this->yBallPos, 
-                                     this->desiredHeight,
-                                     this->angle);
+        if (!this->bCoords) {
+            this->desiredHeight = this->setDesiredHeight;
+            this->angle = this->setAngle;
+        }
+        else {
+            this->bPidBallSwitch = true;
+            this->convertXYToHeightAngle(this->xBallPos,
+                this->yBallPos,
+                this->desiredHeight,
+                this->angle);
 
-        //UE_LOG(LogTemp, Warning, TEXT("Height: %f Angle: %f"), this->desiredHeight, this->angle);
+            //UE_LOG(LogTemp, Warning, TEXT("Height: %f Angle: %f"), this->desiredHeight, this->angle);
+        }
+
+        this->PIDBall(DeltaTime);
+        this->PIDServo(DeltaTime);
+        //this->rotate(this->inAngle);
+    }
+    else if (ERunningModesTube::VISUALIZATION == this->mode){
+        this->onReqCompleteFunctor = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
+            this->funcForWebHandler(request, response, connected);
+        };
+        this->webHandler->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctor);
+
+        this->webHandler->sendRequest();
+
+        if (this->reqData.response.IsValid()){
+            UE_LOG(LogTemp, Display, TEXT("Response Tube: = %s"), *this->reqData.response->GetContentAsString());
+        }
+        else {
+            UE_LOG(LogTemp, Display, TEXT("Response Tube not valid"));
+        }
+    }
+    else{
+
     }
 
-    this->PIDBall(DeltaTime);
-    this->PIDServo(DeltaTime);
-    //this->rotate(this->inAngle);
+    this->rotateWidgetToFaceCamera();
 }
 
 #if 0

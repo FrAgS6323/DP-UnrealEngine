@@ -2,13 +2,22 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/PointLightComponent.h"
+#include "WebHandler.h"
 #include "Case.generated.h"
+
+UENUM(BlueprintType)
+enum class ERunningModesCase : uint8
+{
+	SIMULATION      UMETA(DisplayName = "Simulation"),
+	VISUALIZATION   UMETA(DisplayName = "Visualization"),
+};
 
 UCLASS()
 class TUBEUE_API ACase : public AActor
 {
 	GENERATED_BODY()
 	private:
+		bool bIsActive = false;
 		static constexpr size_t displaySize = 5;
 		typedef struct matElementData {
 			bool bSwitch;
@@ -28,6 +37,9 @@ class TUBEUE_API ACase : public AActor
 						rightRedKnob;
 		TArray<MatElementData> sevenSegOne, sevenSegTwo;
 		TArray<TArray<MatElementData>> displayUp, displayDown;
+		WebHandler* webHandler;
+		WebHandler::ReqData reqData;
+		TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> onReqCompleteFunctor;
 		void initSegArray(TArray<MatElementData>& segArray, 
 						  const TArray<int>& slots, 
 						  const TCHAR* offMatPath,
@@ -44,6 +56,7 @@ class TUBEUE_API ACase : public AActor
 		void clearSegArray(const TArray<MatElementData>& segArray);
 		void clearDisplay(const TArray<TArray<MatElementData>>& display);
 		void renderMaterials();
+		void funcForWebHandler(FHttpRequestPtr request, FHttpResponsePtr response, bool connected);
 		//TObjectPtr<UPointLightComponent> pointLight;
 	protected:
 		// Called when the game starts or when spawned
@@ -64,6 +77,7 @@ class TUBEUE_API ACase : public AActor
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SevenSegDisplays") int sevenSegTwoNum;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Displays") int displayUpNum;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Displays") int displayDownNum;
-		// Called every frame
+		UPROPERTY(EditAnywhere, Category = "Runnning Mode") ERunningModesCase mode = ERunningModesCase::SIMULATION;
+		void setActive(bool bActive);
 		virtual void Tick(float DeltaTime) override;
 };

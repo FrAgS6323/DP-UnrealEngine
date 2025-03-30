@@ -13,9 +13,10 @@ UCLASS(Blueprintable)
 class TUBEUE_API ATurtleBody : public APawn{
 	GENERATED_BODY()
 	private:
+		bool bIsActive = false, bLidar;
 		inline static double wheelRotationVel = 1000.0f;
 		inline static double lidarRotationVel = 1500.0f;
-		//UPROPERTY(VisibleAnywhere, Category = "Meshes")
+		APlayerController* playerController;
 		TObjectPtr<UStaticMeshComponent> sBodyMesh;
 		TObjectPtr<UStaticMeshComponent> sLeftWheelMesh;
 		TObjectPtr<UStaticMeshComponent> sRightWheelMesh;
@@ -23,7 +24,6 @@ class TUBEUE_API ATurtleBody : public APawn{
 		TObjectPtr<UStaticMeshComponent> sRightBallMesh;
 		TObjectPtr<UStaticMeshComponent> sLidarBottomMesh;
 		TObjectPtr<UStaticMeshComponent> sLidarTopMesh;
-		//UPROPERTY(VisibleAnywhere, Category = "Joints")
 		TObjectPtr<UPhysicsConstraintComponent> leftWheelJoint;
 		TObjectPtr<UPhysicsConstraintComponent> rightWheelJoint;
 		TObjectPtr<UPhysicsConstraintComponent> leftBallJoint;
@@ -35,19 +35,11 @@ class TUBEUE_API ATurtleBody : public APawn{
 		void moveLR(float value);
 		void moveRobot(float value);
 		void turnLidar(double speed, bool bRaycast);
-
 		void rotateWheel(UStaticMeshComponent* wheel, double direction);
 	protected:
-		// Called when the game starts or when spawned
 		virtual void BeginPlay() override;
 	public:	
 		ATurtleBody();
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement") bool bForward;
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement") bool bBackward;
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement") bool bTurnLeft;
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement") bool bTurnRight;
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lidar") bool bTurnLidar;
-		void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent);
-		//virtual void OnConstruction(const FTransform& Transform) override;
+		void setActive(APlayerController* playerController, bool bActive);
 		virtual void Tick(float DeltaTime) override;
 };

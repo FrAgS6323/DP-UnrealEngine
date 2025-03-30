@@ -47,6 +47,24 @@ ACase::ACase() {
 	this->sCaseMesh->SetEnableGravity(true);
 	this->sCaseMesh->SetMobility(EComponentMobility::Movable);
 	this->sCaseMesh->SetMassOverrideInKg(NAME_None, 10.0f, true);
+
+	this->webHandler = new WebHandler(TEXT("http://147.232.60.231:5001/kuforDataAPI"), WebHandler::eRequestType::GET);
+}
+
+void ACase::funcForWebHandler(FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
+	this->reqData.request = request;
+	this->reqData.response = response;
+	this->reqData.connected = connected;
+
+#if 0
+	TSharedPtr<FJsonObject> responseObj;
+	TSharedRef<TJsonReader<>> jsonReader = TJsonReaderFactory<>::Create(response->GetContentAsString());
+	FJsonSerializer::Deserialize(jsonReader, responseObj);
+
+	//UE_LOG(LogTemp, Warning, TEXT("response: %s"), *this->reqData.response->GetContentAsString());
+	UE_LOG(LogTemp, Warning, TEXT("parsed-> target: %s"), *responseObj->GetStringField("target"));
+#endif
+
 }
 
 void ACase::initSegArray(TArray<MatElementData>& segArray, 
@@ -236,8 +254,30 @@ void ACase::BeginPlay(){
 	Super::BeginPlay();
 }
 
+void ACase::setActive(bool bActive){
+	this->bIsActive = bActive;
+	UE_LOG(LogTemp, Warning, TEXT("Case now active!"));
+}
+
 void ACase::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
+
+	if (ERunningModesCase::SIMULATION == this->mode) {}
+	else {
+		this->onReqCompleteFunctor = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
+			this->funcForWebHandler(request, response, connected);
+			};
+		this->webHandler->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctor);
+
+		this->webHandler->sendRequest();
+
+		if (this->reqData.response.IsValid()) {
+			UE_LOG(LogTemp, Display, TEXT("Response Case: = %s"), *this->reqData.response->GetContentAsString());
+		}
+		else {
+			UE_LOG(LogTemp, Display, TEXT("Response Case not valid"));
+		}
+	}
 
 	this->numToSegments(this->sevenSegOneNum, this->sevenSegOne);
 	this->numToSegments(this->sevenSegTwoNum, this->sevenSegTwo);

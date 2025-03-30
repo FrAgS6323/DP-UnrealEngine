@@ -3,30 +3,68 @@
 #include "Components/SceneComponent.h"
 #include "GameFramework/Actor.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
+#include "Components/WidgetComponent.h"
+#include "Components/WidgetSwitcher.h"
+#include "Components/EditableTextBox.h"
+#include "Components/CheckBox.h"
+#include "Components/Button.h"
+#include "Components/CanvasPanel.h"
 #include "PID.h"
 #include "RotateTube.h"
+#include "WebHandler.h"
 #include "Tube.generated.h"
+
+enum class eRequestType { GET, POST };
+UENUM(BlueprintType)
+enum class ERunningModesTube : uint8
+{
+	SIMULATION      UMETA(DisplayName = "Simulation"),
+	VISUALIZATION   UMETA(DisplayName = "Visualization"),
+	SIM_IN_REAL_TIME UMETA(DisplayName = "Sim in Real Time")
+};
 
 UCLASS(Blueprintable)
 class TUBEUE_API ATube : public AActor{
-
 	GENERATED_BODY()
 	private:
+		bool bPidBallSwitch = false,
+			 bSetIdealBallPID = false,
+			 bCoords = false,
+			 bIsActive = false;
+		int xBallPos = 0, 
+			yBallPos = 0;
 		inline static constexpr double motorHeight = 7.42;
 		inline static constexpr double halfTubeHeight = 23.0;
 		inline static constexpr double height = 58.0f;
 		inline static constexpr double minAngle = 0.0;
 		inline static constexpr double maxAngle = 60.0;
 		inline static constexpr double numRotationVel = 1.0;
+		double setDesiredHeight = 0.0,
+			   ballP = 0.75, 
+			   ballI = 0.25, 
+			   ballD = 0.1, 
+			   setAngle = 0.0,
+			   servoP = 18.0,
+			   servoI = 8.0,
+			   servoD = 16.0,
+			saturationLimitBallMin = 0.0,
+			saturationLimitBallMax = 5.0,
+			saturationLimitServoMin = -1000.0,
+			saturationLimitServoMax = 1000.0;
 		bool bHit = true;
 		double distance, angle, desiredHeight;
 		//size_t count = 0;
+		ERunningModesTube mode = ERunningModesTube::SIMULATION;
 		TObjectPtr<UStaticMeshComponent> sTubeMesh;
 		TObjectPtr<UStaticMeshComponent> sHolderMesh;
 		TObjectPtr<UStaticMeshComponent> sBallMesh;
 		TObjectPtr<UPhysicsConstraintComponent> tubeJoint;
 		UPID *pidControllerBall, 
 			 *pidControllerServo;
+		WebHandler *webHandler;
+		WebHandler::ReqData reqData;
+		UWidgetSwitcher* widgetSwitcher;
+		TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> onReqCompleteFunctor;
 		void initialize();
 		void performRaycast();
 		auto getDistance() -> double;
@@ -43,28 +81,26 @@ class TUBEUE_API ATube : public AActor{
 		void PIDBall(float deltaTime);
 		void PIDServo(float deltaTime);
 		void rotate(double inAngleDeg);
+		void funcForWebHandler(FHttpRequestPtr request, FHttpResponsePtr response, bool connected);
+		void rotateWidgetToFaceCamera();
+		UFUNCTION() void bindOnButtonSimClick();
+		UFUNCTION() void bindOnButtonVizClick();
+		UFUNCTION() void bindOnButtonSimIRLClick();
+		UFUNCTION() void bindOnRegCheckboxChange(bool bIsChecked);
+		UFUNCTION() void bindOnidealPIDCheckboxChange(bool bIsChecked);
+		UFUNCTION() void bindOnidealCoordsCheckboxChange(bool bIsChecked);
+		UFUNCTION() void bindOnTextCommitHeight(const FText& Text, ETextCommit::Type CommitType);
+		UFUNCTION() void bindOnTextCommitAngle(const FText& Text, ETextCommit::Type CommitType);
+		UFUNCTION() void bindOnTextCommitX(const FText& Text, ETextCommit::Type CommitType);
+		UFUNCTION() void bindOnTextCommitY(const FText& Text, ETextCommit::Type CommitType);
+		UFUNCTION() void bindOnTextCommitP(const FText& Text, ETextCommit::Type CommitType);
+		UFUNCTION() void bindOnTextCommitI(const FText& Text, ETextCommit::Type CommitType);
+		UFUNCTION() void bindOnTextCommitD(const FText& Text, ETextCommit::Type CommitType);
 	protected:
 		virtual void BeginPlay() override;
 	public:	
 		ATube();
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PID Ball") bool bPidBallSwitch;
-		UPROPERTY(EditAnywhere, Category = "PID Ball") bool bSetIdealBallPID;
-		UPROPERTY(EditAnywhere, Category = "PID Ball") double ballP = 0.75;
-		UPROPERTY(EditAnywhere, Category = "PID Ball") double ballI = 0.25;
-		UPROPERTY(EditAnywhere, Category = "PID Ball") double ballD = 0.1;
-		UPROPERTY(EditAnywhere, Category = "PID Servo") bool bSetIdealServoPID;
-		UPROPERTY(EditAnywhere, Category = "PID Servo") double servoP = 18.0;
-		UPROPERTY(EditAnywhere, Category = "PID Servo") double servoI = 8.0;
-		UPROPERTY(EditAnywhere, Category = "PID Servo") double servoD = 16.0;
-		UPROPERTY(EditAnywhere, Category = "XY pos") bool bCoords = false;
-		UPROPERTY(EditAnywhere, Category = "XY pos") int xBallPos = 0;
-		UPROPERTY(EditAnywhere, Category = "XY pos") int yBallPos = 0;
-		UPROPERTY(EditAnywhere, Category = "Settings") double setAngle = 45.0;
-		UPROPERTY(EditAnywhere, Category = "Settings") double setDesiredHeight = 20.0;
-		UPROPERTY(EditAnywhere, Category = "Settings") double saturationLimitBallMin = 0.0;
-		UPROPERTY(EditAnywhere, Category = "Settings") double saturationLimitBallMax = 5.0;
-		UPROPERTY(EditAnywhere, Category = "Settings") double saturationLimitServoMin = -1000.0;
-		UPROPERTY(EditAnywhere, Category = "Settings") double saturationLimitServoMax = 1000.0;
-		//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Joint") class UPhysicsConstraintComponent* tubeJoint;
+		void setActive(bool bActive);
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widgets") TObjectPtr<UWidgetComponent> widgetComponent;
 		virtual void Tick(float DeltaTime) override;
 };

@@ -38,6 +38,10 @@ class TUBEUE_API UEngineHelper : public UObject {
 
 		static auto degToRad(double deg) -> double;
 		static auto radToDeg(double rad) -> double;
+		static auto findActorsOfClass(const UObject *worldContextObject, 
+									  TSubclassOf<AActor> actorClass, 
+									  size_t index) -> TObjectPtr<AActor>;
+		static void setSpectatorCameraSpeed(APlayerController* playerController, float speed);
 
 		template<typename T>
 		static auto spawnActor(UWorld* world,
