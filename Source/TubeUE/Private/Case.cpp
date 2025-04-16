@@ -29,7 +29,7 @@ ACase::ACase() {
 					   TEXT("/Game/Models/Case/GlowMaterials/Glowing/GlowDisplayRed"));
 
 	this->initDisplay(this->displayDown,
-					  TArray<TArray<int>>{{88, 89, 90, 5, 92, 93, 94},
+					  TArray<TArray<int>>{{88, 89, 90, 91, 92, 93, 94},
 										  {95, 96, 97, 98, 99, 100, 101},
 										  {102, 103, 104, 105, 106, 107, 108},
 										  {109, 110, 111, 112, 113, 114, 115},
@@ -52,19 +52,53 @@ ACase::ACase() {
 }
 
 void ACase::funcForWebHandler(FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
-	this->reqData.request = request;
-	this->reqData.response = response;
-	this->reqData.connected = connected;
+	if (response.IsValid()) {
+		TSharedRef<TJsonReader<>> jsonReader = TJsonReaderFactory<>::Create(response->GetContentAsString());
+		FJsonSerializer::Deserialize(jsonReader, this->responseObj);
+		
+		//UE_LOG(LogTemp, Warning, TEXT("response: %s"), *this->reqData.response->GetContentAsString());
+		//UE_LOG(LogTemp, Warning, TEXT("parsed-> EthernetC:1:O.1: %s"), *this->responseObj->GetStringField("EthernetC:1:O.1"));
+		FString value;
 
-#if 0
-	TSharedPtr<FJsonObject> responseObj;
-	TSharedRef<TJsonReader<>> jsonReader = TJsonReaderFactory<>::Create(response->GetContentAsString());
-	FJsonSerializer::Deserialize(jsonReader, responseObj);
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.14", value)) this->blueButton.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.11", value)) this->redButton.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.12", value)) this->yellowButton.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.13", value)) this->greenButton.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
 
-	//UE_LOG(LogTemp, Warning, TEXT("response: %s"), *this->reqData.response->GetContentAsString());
-	UE_LOG(LogTemp, Warning, TEXT("parsed-> target: %s"), *responseObj->GetStringField("target"));
-#endif
+		if (this->responseObj->TryGetStringField("Local:1:O.Ch0Data", value)) LexTryParseString(this->displayUpNum, *value);
+		if (this->responseObj->TryGetStringField("Local:1:O.Ch1Data", value)){ 
+			LexTryParseString(this->displayDownNum, *value); 
+			this->displayDownNum *= 2; 
+		}
+		if(true){}
+		else while (true) {}
+		
 
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.8", value)) this->leftGreenLed.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.9", value)) this->middleGreenLed.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.10", value)) this->rightGreenLed.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+
+		if (this->responseObj->TryGetStringField("Local:2:I.Data.3", value)) this->leftRedKnob.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+		if (this->responseObj->TryGetStringField("Local:2:I.Data.5", value)) this->rightRedKnob.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+
+		if (this->responseObj->TryGetStringField("EthernetC:2:O.1", value)) this->sevenSegOne[0].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //a
+		if (this->responseObj->TryGetStringField("EthernetC:2:O.0", value)) this->sevenSegOne[1].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //b
+		if (this->responseObj->TryGetStringField("EthernetC:1:O.2", value)) this->sevenSegOne[2].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //c
+		if (this->responseObj->TryGetStringField("EthernetC:1:O.1", value)) this->sevenSegOne[3].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //d
+		if (this->responseObj->TryGetStringField("EthernetC:1:O.0", value)) this->sevenSegOne[4].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //e
+		if (this->responseObj->TryGetStringField("EthernetC:2:O.2", value)) this->sevenSegOne[5].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //f
+		if (this->responseObj->TryGetStringField("EthernetC:2:O.3", value)) this->sevenSegOne[6].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //g
+		if (this->responseObj->TryGetStringField("EthernetC:1:O.3", value)) this->sevenSegOne[7].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //.
+
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.5", value)) this->sevenSegTwo[0].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //a
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.4", value)) this->sevenSegTwo[1].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //b
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.2", value)) this->sevenSegTwo[2].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //c
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.1", value)) this->sevenSegTwo[3].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //d
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.0", value)) this->sevenSegTwo[4].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //e
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.6", value)) this->sevenSegTwo[5].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //f
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.7", value)) this->sevenSegTwo[6].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //g
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.3", value)) this->sevenSegTwo[7].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //.
+	}
 }
 
 void ACase::initSegArray(TArray<MatElementData>& segArray, 
@@ -213,6 +247,12 @@ void ACase::numToSegments(const int &num, TArray<MatElementData> &segArray){
 
 void ACase::numToDisplay(const int& num, TArray<TArray<MatElementData>>& display){
 	TArray<int> digits = this->numToDigits(num);
+
+	if (digits.Num() > 5){
+		UE_LOG(LogTemp, Warning, TEXT("U must enter number below 5 digits!"));
+		return;
+	}
+
 	int32 numOfEmptyDigits = ACase::displaySize - digits.Num();
 
 	for (size_t emptyIdx = 0; emptyIdx < numOfEmptyDigits; emptyIdx++)
@@ -233,16 +273,27 @@ void ACase::renderDisplay(const TArray<TArray<MatElementData>>& display){
 }
 
 void ACase::renderMaterials(){
-	this->bBlueButton ? this->sCaseMesh->SetMaterial(this->blueButton.slot, this->blueButton.matOn) : this->sCaseMesh->SetMaterial(this->blueButton.slot, this->blueButton.matOff);
-	this->bRedButton ? this->sCaseMesh->SetMaterial(this->redButton.slot, this->redButton.matOn) : this->sCaseMesh->SetMaterial(this->redButton.slot, this->redButton.matOff);
-	this->bGreenButton ? this->sCaseMesh->SetMaterial(this->greenButton.slot, this->greenButton.matOn) : this->sCaseMesh->SetMaterial(this->greenButton.slot, this->greenButton.matOff);
-	this->bYellowButton ? this->sCaseMesh->SetMaterial(this->yellowButton.slot, this->yellowButton.matOn) : this->sCaseMesh->SetMaterial(this->yellowButton.slot, this->yellowButton.matOff);
-	this->bLeftGreenLed ? this->sCaseMesh->SetMaterial(this->leftGreenLed.slot, this->leftGreenLed.matOn) : this->sCaseMesh->SetMaterial(this->leftGreenLed.slot, this->leftGreenLed.matOff);
-	this->bMiddleGreenLed ? this->sCaseMesh->SetMaterial(this->middleGreenLed.slot, this->middleGreenLed.matOn) : this->sCaseMesh->SetMaterial(this->middleGreenLed.slot, this->middleGreenLed.matOff);
-	this->bRightGreenLed ? this->sCaseMesh->SetMaterial(this->rightGreenLed.slot, this->rightGreenLed.matOn) : this->sCaseMesh->SetMaterial(this->rightGreenLed.slot, this->rightGreenLed.matOff);
-	this->bRightRedKnob ? this->sCaseMesh->SetMaterial(this->rightRedKnob.slot, this->rightRedKnob.matOn) : this->sCaseMesh->SetMaterial(this->rightRedKnob.slot, this->rightRedKnob.matOff);
-	this->bLeftRedKnob ? this->sCaseMesh->SetMaterial(this->leftRedKnob.slot, this->leftRedKnob.matOn) : this->sCaseMesh->SetMaterial(this->leftRedKnob.slot, this->leftRedKnob.matOff);
-
+	if (ERunningModesCase::SIMULATION == this->mode) {
+		this->bBlueButton ? this->sCaseMesh->SetMaterial(this->blueButton.slot, this->blueButton.matOn) : this->sCaseMesh->SetMaterial(this->blueButton.slot, this->blueButton.matOff);
+		this->bRedButton ? this->sCaseMesh->SetMaterial(this->redButton.slot, this->redButton.matOn) : this->sCaseMesh->SetMaterial(this->redButton.slot, this->redButton.matOff);
+		this->bGreenButton ? this->sCaseMesh->SetMaterial(this->greenButton.slot, this->greenButton.matOn) : this->sCaseMesh->SetMaterial(this->greenButton.slot, this->greenButton.matOff);
+		this->bYellowButton ? this->sCaseMesh->SetMaterial(this->yellowButton.slot, this->yellowButton.matOn) : this->sCaseMesh->SetMaterial(this->yellowButton.slot, this->yellowButton.matOff);
+		this->bLeftGreenLed ? this->sCaseMesh->SetMaterial(this->leftGreenLed.slot, this->leftGreenLed.matOn) : this->sCaseMesh->SetMaterial(this->leftGreenLed.slot, this->leftGreenLed.matOff);
+		this->bMiddleGreenLed ? this->sCaseMesh->SetMaterial(this->middleGreenLed.slot, this->middleGreenLed.matOn) : this->sCaseMesh->SetMaterial(this->middleGreenLed.slot, this->middleGreenLed.matOff);
+		this->bRightGreenLed ? this->sCaseMesh->SetMaterial(this->rightGreenLed.slot, this->rightGreenLed.matOn) : this->sCaseMesh->SetMaterial(this->rightGreenLed.slot, this->rightGreenLed.matOff);
+		this->bRightRedKnob ? this->sCaseMesh->SetMaterial(this->rightRedKnob.slot, this->rightRedKnob.matOn) : this->sCaseMesh->SetMaterial(this->rightRedKnob.slot, this->rightRedKnob.matOff);
+		this->bLeftRedKnob ? this->sCaseMesh->SetMaterial(this->leftRedKnob.slot, this->leftRedKnob.matOn) : this->sCaseMesh->SetMaterial(this->leftRedKnob.slot, this->leftRedKnob.matOff);
+	}else{
+		this->blueButton.bSwitch ? this->sCaseMesh->SetMaterial(this->blueButton.slot, this->blueButton.matOn) : this->sCaseMesh->SetMaterial(this->blueButton.slot, this->blueButton.matOff);
+		this->redButton.bSwitch ? this->sCaseMesh->SetMaterial(this->redButton.slot, this->redButton.matOn) : this->sCaseMesh->SetMaterial(this->redButton.slot, this->redButton.matOff);
+		this->greenButton.bSwitch ? this->sCaseMesh->SetMaterial(this->greenButton.slot, this->greenButton.matOn) : this->sCaseMesh->SetMaterial(this->greenButton.slot, this->greenButton.matOff);
+		this->yellowButton.bSwitch ? this->sCaseMesh->SetMaterial(this->yellowButton.slot, this->yellowButton.matOn) : this->sCaseMesh->SetMaterial(this->yellowButton.slot, this->yellowButton.matOff);
+		this->leftGreenLed.bSwitch ? this->sCaseMesh->SetMaterial(this->leftGreenLed.slot, this->leftGreenLed.matOn) : this->sCaseMesh->SetMaterial(this->leftGreenLed.slot, this->leftGreenLed.matOff);
+		this->middleGreenLed.bSwitch ? this->sCaseMesh->SetMaterial(this->middleGreenLed.slot, this->middleGreenLed.matOn) : this->sCaseMesh->SetMaterial(this->middleGreenLed.slot, this->middleGreenLed.matOff);
+		this->rightGreenLed.bSwitch ? this->sCaseMesh->SetMaterial(this->rightGreenLed.slot, this->rightGreenLed.matOn) : this->sCaseMesh->SetMaterial(this->rightGreenLed.slot, this->rightGreenLed.matOff);
+		this->rightRedKnob.bSwitch ? this->sCaseMesh->SetMaterial(this->rightRedKnob.slot, this->rightRedKnob.matOn) : this->sCaseMesh->SetMaterial(this->rightRedKnob.slot, this->rightRedKnob.matOff);
+		this->leftRedKnob.bSwitch ? this->sCaseMesh->SetMaterial(this->leftRedKnob.slot, this->leftRedKnob.matOn) : this->sCaseMesh->SetMaterial(this->leftRedKnob.slot, this->leftRedKnob.matOff);
+	}
 	this->renderSegArray(this->sevenSegOne);
 	this->renderSegArray(this->sevenSegTwo);
 
@@ -262,26 +313,20 @@ void ACase::setActive(bool bActive){
 void ACase::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
 
-	if (ERunningModesCase::SIMULATION == this->mode) {}
-	else {
+	if (ERunningModesCase::VISUALIZATION == this->mode){
 		this->onReqCompleteFunctor = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
 			this->funcForWebHandler(request, response, connected);
-			};
-		this->webHandler->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctor);
-
+		};
+		this->webHandler->initRequest();
+		this->webHandler->setFunctorOnProcessRequestComplete(this, MakeShared<TFunction<void(FHttpRequestPtr, FHttpResponsePtr, bool)>>(MoveTemp(this->onReqCompleteFunctor)));
 		this->webHandler->sendRequest();
+	}else{
+		this->numToSegments(this->sevenSegOneNum, this->sevenSegOne);
+		this->numToSegments(this->sevenSegTwoNum, this->sevenSegTwo);
 
-		if (this->reqData.response.IsValid()) {
-			UE_LOG(LogTemp, Display, TEXT("Response Case: = %s"), *this->reqData.response->GetContentAsString());
-		}
-		else {
-			UE_LOG(LogTemp, Display, TEXT("Response Case not valid"));
-		}
+		this->displayUpNum = this->setDisplayUpNum;
+		this->displayDownNum = this->setDisplayDownNum;
 	}
-
-	this->numToSegments(this->sevenSegOneNum, this->sevenSegOne);
-	this->numToSegments(this->sevenSegTwoNum, this->sevenSegTwo);
-
 	this->numToDisplay(this->displayUpNum, this->displayUp);
 	this->numToDisplay(this->displayDownNum, this->displayDown);
 

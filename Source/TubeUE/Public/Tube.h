@@ -15,6 +15,7 @@
 #include "Tube.generated.h"
 
 enum class eRequestType { GET, POST };
+
 UENUM(BlueprintType)
 enum class ERunningModesTube : uint8
 {
@@ -28,7 +29,7 @@ class TUBEUE_API ATube : public AActor{
 	GENERATED_BODY()
 	private:
 		bool bPidBallSwitch = false,
-			 bSetIdealBallPID = false,
+			 bSetIdealBallPID = true,
 			 bCoords = false,
 			 bIsActive = false;
 		int xBallPos = 0, 
@@ -52,20 +53,21 @@ class TUBEUE_API ATube : public AActor{
 			saturationLimitServoMin = -1000.0,
 			saturationLimitServoMax = 1000.0;
 		bool bHit = true;
-		double distance, angle, desiredHeight;
-		//size_t count = 0;
+		double distance, angle, desiredHeight, vizActualHeight;
+		TArray<double> regHeights;
 		ERunningModesTube mode = ERunningModesTube::SIMULATION;
 		TObjectPtr<UStaticMeshComponent> sTubeMesh;
 		TObjectPtr<UStaticMeshComponent> sHolderMesh;
 		TObjectPtr<UStaticMeshComponent> sBallMesh;
 		TObjectPtr<UPhysicsConstraintComponent> tubeJoint;
+		TObjectPtr<UWidgetSwitcher> widgetSwitcher;
+		TSharedPtr<FJsonObject> responseObj;
 		UPID *pidControllerBall, 
 			 *pidControllerServo;
 		WebHandler *webHandler;
-		WebHandler::ReqData reqData;
-		UWidgetSwitcher* widgetSwitcher;
 		TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> onReqCompleteFunctor;
 		void initialize();
+		void setMeshesPhysicsAndGravity(bool bState);
 		void performRaycast();
 		auto getDistance() -> double;
 		auto getRegulationHeight() -> double;
@@ -80,7 +82,6 @@ class TUBEUE_API ATube : public AActor{
 									double& yOut);
 		void PIDBall(float deltaTime);
 		void PIDServo(float deltaTime);
-		void rotate(double inAngleDeg);
 		void funcForWebHandler(FHttpRequestPtr request, FHttpResponsePtr response, bool connected);
 		void rotateWidgetToFaceCamera();
 		UFUNCTION() void bindOnButtonSimClick();
@@ -88,7 +89,7 @@ class TUBEUE_API ATube : public AActor{
 		UFUNCTION() void bindOnButtonSimIRLClick();
 		UFUNCTION() void bindOnRegCheckboxChange(bool bIsChecked);
 		UFUNCTION() void bindOnidealPIDCheckboxChange(bool bIsChecked);
-		UFUNCTION() void bindOnidealCoordsCheckboxChange(bool bIsChecked);
+		UFUNCTION() void bindOnCoordsCheckboxChange(bool bIsChecked);
 		UFUNCTION() void bindOnTextCommitHeight(const FText& Text, ETextCommit::Type CommitType);
 		UFUNCTION() void bindOnTextCommitAngle(const FText& Text, ETextCommit::Type CommitType);
 		UFUNCTION() void bindOnTextCommitX(const FText& Text, ETextCommit::Type CommitType);

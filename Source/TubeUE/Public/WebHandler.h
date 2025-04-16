@@ -4,9 +4,6 @@
 #include <functional>
 
 class TUBEUE_API WebHandler{
-	private:
-		FHttpRequestPtr request;
-		FHttpResponsePtr response;
 	public:
 		enum class eRequestType { GET, POST };
 		class ReqData {
@@ -17,7 +14,13 @@ class TUBEUE_API WebHandler{
 		};
 		WebHandler() = delete;
 		WebHandler(const TCHAR* url, WebHandler::eRequestType reqType);
-		void setFunctorOnProcessRequestComplete(AActor *actor, TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>& functor);
+		void initRequest();
+		void setFunctorOnProcessRequestComplete(AActor *actor, TSharedPtr<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>> functorPtr);
 		void sendRequest();
 		~WebHandler();
+	private:
+		const FString url;
+		WebHandler::eRequestType requestType;
+		FHttpRequestPtr request;
+		FHttpResponsePtr response;
 };

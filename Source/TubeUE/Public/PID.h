@@ -5,7 +5,6 @@
 enum class ePIDusage { HEIGHT, ANGLE };
 
 class TUBEUE_API UPID{
-	//GENERATED_BODY()
 	private:
 		bool clamp;
 		double kP,
@@ -18,16 +17,13 @@ class TUBEUE_API UPID{
 			   i,
 			   d;
 		ePIDusage usage;
-	protected:
-		// Called when the game starts
-		//virtual void BeginPlay() override;
 	public:
-		static constexpr double idealPBall = 0.75; //prvotna hodnota vypocitana -> // 1.19f // 7.55f | 2.0f
-		static constexpr double idealIBall = 0.25;  // 1.315f // 0.033f | 0.85f
-		static constexpr double idealDBall = 0.1; // 0.329f // 0.008f | 0.5f
-		static constexpr double idealPServo = 18.0; //prvotna hodnota vypocitana -> // 1.19f // 7.55f | 2.0f
-		static constexpr double idealIServo = 6.0;  // 1.315f // 0.033f | 0.85f
-		static constexpr double idealDServo = 15.0; // 0.329f // 0.008f | 0.5f
+		static constexpr double idealPBall = 0.75; // 0.75 prvotna hodnota vypocitana -> // 1.19f // 7.55f | 2.0f
+		static constexpr double idealIBall = 0.25; //0.25 1.315f // 0.033f | 0.85f
+		static constexpr double idealDBall = 0.05; //0.1 0.329f // 0.008f | 0.5f
+		static constexpr double idealPServo = 18.0;
+		static constexpr double idealIServo = 8.0; 
+		static constexpr double idealDServo = 16.0;
 		UPID(ePIDusage usage);
 		bool detectChange(double P,
 						  double I,

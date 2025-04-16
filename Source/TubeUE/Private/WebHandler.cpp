@@ -2,33 +2,22 @@
 #include "Tube.h"
 
 WebHandler::WebHandler(const TCHAR* url, WebHandler::eRequestType reqType):
-	request(FHttpModule::Get().CreateRequest()){
+	url(url),
+	requestType(reqType){
+	this->initRequest();
 	//this->request->OnProcessRequestComplete().BindUObject(this, WebHandler::onResponseReceived);
-	this->request->SetURL(url);
-	this->request->SetVerb(WebHandler::eRequestType::GET == reqType ? "GET" : "POST");
 }
 
-void WebHandler::setFunctorOnProcessRequestComplete(AActor *actor, TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> &functor){
-	this->request->OnProcessRequestComplete().BindLambda([&](FHttpRequestPtr request, FHttpResponsePtr response, bool connected){
-			functor(request, response, connected);
+void WebHandler::initRequest(){
+	this->request = FHttpModule::Get().CreateRequest();
+	this->request->SetURL(url);
+	this->request->SetVerb(WebHandler::eRequestType::GET == this->requestType ? "GET" : "POST");
+}
 
-#if 0
-			TSharedPtr<FJsonObject> responseObj;
-			TSharedRef<TJsonReader<>> jsonReader = TJsonReaderFactory<>::Create(response->GetContentAsString());
-			FJsonSerializer::Deserialize(jsonReader, responseObj);
-
-			//const TCHAR* strConnected = connected ? TEXT("True") : TEXT("False");
-
-			//UE_LOG(LogTemp, Warning, TEXT("Request URL: %s"), *request->GetURL());
-			//UE_LOG(LogTemp, Warning, TEXT("WH request: %s"), *request->GetContent());
-			if (response.IsValid()) {
-				UE_LOG(LogTemp, Warning, TEXT("response: %s"), *response->GetContentAsString());
-				//UE_LOG(LogTemp, Warning, TEXT("parsed-> target: %s"), *responseObj->GetStringField("target"));
-			}
-			else{
-				UE_LOG(LogTemp, Warning, TEXT("WH response invalid!"));
-			}
-#endif
+void WebHandler::setFunctorOnProcessRequestComplete(AActor *actor, TSharedPtr<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>> functorPtr){
+	this->request->OnProcessRequestComplete().BindLambda([functorPtr](FHttpRequestPtr request, FHttpResponsePtr response, bool connected){
+		if(functorPtr.IsValid())
+			(*functorPtr)(request, response, connected);
 	});
 }
 

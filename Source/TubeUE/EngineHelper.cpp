@@ -94,19 +94,18 @@ auto UEngineHelper::performRaycast(UWorld *world,
 								   double rayLength,
 								   double &hitDistance) -> bool {
 	FVector startVec = mesh->GetComponentLocation() + startOffset,
-			endVec = ((rayDirection * rayLength) + startVec);
+			endVec = (rayDirection * rayLength) + startVec;
 
 	FHitResult hitResult;
 	FCollisionQueryParams collisionParams;
 
-	if(!meshesToExclude.IsEmpty())  collisionParams.AddIgnoredComponents(meshesToExclude);	
+	if(!meshesToExclude.IsEmpty())  collisionParams.AddIgnoredComponents(meshesToExclude);
 
 	bool bIsHit = world->LineTraceSingleByChannel(hitResult,
 												  startVec,
 												  endVec,
 												  ECC_Visibility,
 												  collisionParams);
-
 	if (bIsHit) {
 		//UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *hitResult.GetActor()->GetName());
 
@@ -151,4 +150,196 @@ void UEngineHelper::setSpectatorCameraSpeed(APlayerController* playerController,
 		UFloatingPawnMovement* MoveComp = spectatorPawn->FindComponentByClass<UFloatingPawnMovement>();
 		if (MoveComp) MoveComp->MaxSpeed = speed;
 	}
+}
+
+void UEngineHelper::Profiler::profileFPS(bool bScreen, float deltaTime, FColor color){
+	double fps = 1.0f / deltaTime;
+
+	if (bScreen) {
+		FString FPSstring = FString::Printf(TEXT("FPS: %.2f"), fps);
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FPSstring);
+	}
+	else{
+		UE_LOG(LogTemp, Warning, TEXT("FPS: %f"), fps);
+	}
+	UEngineHelper::Profiler::totalFPS += fps;
+}
+
+void UEngineHelper::Profiler::profileRAM(bool bScreen, float delatTime, FColor color){
+	const FPlatformMemoryStats Stats = FPlatformMemory::GetStats();
+	float RAMusage = Stats.UsedPhysical / (1024.0f * 1024.0f),
+		  peakRAM = Stats.PeakUsedPhysical / (1024.0f * 1024.0f),
+		VRAMusage = Stats.UsedVirtual / (1024.0f * 1024.0f);
+
+	if (bScreen) {
+		FString RAMPhysicalString = FString::Printf(TEXT("Used Physical RAM: %.2f MB"), RAMusage),
+			RAMPeakPhysicalString = FString::Printf(TEXT("Peak Used Physical RAM: %.2f MB"),peakRAM),
+			RAMVirtualString = FString::Printf(TEXT("Used Virtual RAM: %.2f MB"), VRAMusage);
+
+		if (GEngine) {
+			GEngine->AddOnScreenDebugMessage(-1, 0.f, color, RAMPhysicalString);
+			GEngine->AddOnScreenDebugMessage(-1, 0.f, color, RAMPeakPhysicalString);
+			GEngine->AddOnScreenDebugMessage(-1, 0.f, color, RAMVirtualString);
+		}
+
+	}
+	else{
+		UE_LOG(LogTemp, Warning, TEXT("Used Physical RAM: %.2f MB"), RAMusage);
+		UE_LOG(LogTemp, Warning, TEXT("Peak Used Physical RAM: %.2f MB"), peakRAM);
+		UE_LOG(LogTemp, Warning, TEXT("Used Virtual RAM: %.2f MB"), VRAMusage);
+	}
+	UEngineHelper::Profiler::totalRAM += RAMusage;
+	//UEngineHelper::Profiler::totalVRAM += VRAMusage;
+}
+
+void UEngineHelper::Profiler::initCPUprofiler(){
+	PdhOpenQuery(NULL, NULL, &cpuQuery);
+	PdhAddCounter(cpuQuery, TEXT("\\Processor(_Total)\\% Processor Time"), NULL, &UEngineHelper::Profiler::cpuTotal);
+	PdhCollectQueryData(UEngineHelper::Profiler::cpuQuery);
+}
+
+void UEngineHelper::Profiler::profileCPU(bool bScreen, float delatTime, FColor color){
+	PDH_FMT_COUNTERVALUE counterVal;
+	PdhCollectQueryData(cpuQuery);
+	PdhGetFormattedCounterValue(cpuTotal, PDH_FMT_DOUBLE, NULL, &counterVal);
+
+	if (bScreen) {
+		FString CPUstring;
+		
+		if(counterVal.doubleValue > 0) CPUstring = FString::Printf(TEXT("CPU Usage: %.2f%%"), counterVal.doubleValue);
+		if(GEngine) GEngine->AddOnScreenDebugMessage(-1, 0.f, color, CPUstring);
+	}else {
+		UE_LOG(LogTemp, Warning, TEXT("CPU Usage: %.2f%%"), counterVal.doubleValue);
+	}
+	UEngineHelper::Profiler::totalCPU += counterVal.doubleValue;
+}
+
+void UEngineHelper::Profiler::profileGPU(bool bScreen, float delatTime, FColor color){
+	IDXGIFactory4* factory = nullptr;
+	HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory));
+
+	auto logGpuVramUsage = [bScreen, color](float &_totalUsedVRAM, float &_totalBudgetVRAM, float &_totalPercentVRAM){
+		IDXGIFactory6* dxgiFactory = nullptr;
+		HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
+		if (FAILED(hr)) return;
+
+		IDXGIAdapter3* adapter = nullptr;
+
+		for (UINT index = 0; ; ++index){
+			IDXGIAdapter1* tempAdapter = nullptr;
+			if (dxgiFactory->EnumAdapters1(index, &tempAdapter) == DXGI_ERROR_NOT_FOUND)
+				break;
+
+			DXGI_ADAPTER_DESC1 desc;
+			tempAdapter->GetDesc1(&desc);
+
+			if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE){
+				tempAdapter->Release();
+				continue;
+			}
+
+			tempAdapter->QueryInterface(IID_PPV_ARGS(&adapter));
+			tempAdapter->Release();
+			break;
+		}
+
+			if (!adapter){
+				dxgiFactory->Release();
+				return;
+			}
+
+			DXGI_QUERY_VIDEO_MEMORY_INFO memoryInfo;
+			if (SUCCEEDED(adapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &memoryInfo))){
+				uint64 usedMB = memoryInfo.CurrentUsage / (1024 * 1024);
+				uint64 budgetMB = memoryInfo.Budget / (1024 * 1024);
+				float percent = (float)usedMB / (float)budgetMB * 100.0f;
+				
+				if (bScreen) {
+					FString GPUVRAMstring = FString::Printf(TEXT("VRAM used: %llu MB / %llu MB (%.2f%%)"), usedMB, budgetMB, percent);
+					if(GEngine) GEngine->AddOnScreenDebugMessage(-1, 0.f, color, GPUVRAMstring);
+				}else{
+					UE_LOG(LogTemp, Warning, TEXT("VRAM used: %llu MB / %llu MB (%.2f%%)"), usedMB, budgetMB, percent);
+				}
+				_totalUsedVRAM += usedMB;
+				_totalBudgetVRAM += budgetMB;
+				_totalPercentVRAM += percent;
+			}else{
+				if (bScreen) {
+					FString queryFailed = FString::Printf(TEXT("QueryVideoMemoryInfo failed!"));
+					if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, queryFailed);
+				}else{
+					UE_LOG(LogTemp, Error, TEXT("QueryVideoMemoryInfo failed!"));
+				}
+			}
+	
+			adapter->Release();
+			dxgiFactory->Release();
+	};
+
+	if (FAILED(hr)){
+		UE_LOG(LogTemp, Error, TEXT("Failed to create DXGIFactory."));
+		return;
+	}
+
+	IDXGIAdapter1* adapter = nullptr;
+
+	for (UINT index = 0; factory->EnumAdapters1(index, &adapter) != DXGI_ERROR_NOT_FOUND; ++index){
+		DXGI_ADAPTER_DESC1 desc;
+		adapter->GetDesc1(&desc);
+
+		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE){
+			adapter->Release();
+			continue;
+		}
+
+		FString gpuName(desc.Description);
+		uint64 vramMB = desc.DedicatedVideoMemory / (1024 * 1024);
+		uint64 sharedMB = desc.SharedSystemMemory / (1024 * 1024);
+		
+		if (bScreen){
+			FString GPUnameString = FString::Printf(TEXT("GPU: %s"), * gpuName),
+				VRAMstring = FString::Printf(TEXT("VRAM: %llu MB"), vramMB),
+				VRAMVirtualString = FString::Printf(TEXT("Shared system memory: %llu MB"), sharedMB);
+
+			if (GEngine) {
+				GEngine->AddOnScreenDebugMessage(-1, 0.f, color, GPUnameString);
+				GEngine->AddOnScreenDebugMessage(-1, 0.f, color, VRAMstring);
+				//GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, VRAMVirtualString);
+			}
+
+		}else{
+			UE_LOG(LogTemp, Warning, TEXT("GPU: %s"), *gpuName);
+			UE_LOG(LogTemp, Warning, TEXT("VRAM (dedicated): %llu MB"), vramMB);
+			//UE_LOG(LogTemp, Warning, TEXT("Shared system memory: %llu MB"), sharedMB);
+		}
+
+		logGpuVramUsage(UEngineHelper::Profiler::totalUsedVRAM,
+						UEngineHelper::Profiler::totalBudgetVRAM,
+						UEngineHelper::Profiler::totalPercentVRAM);
+
+		adapter->Release();
+		break;
+	}
+
+	factory->Release();
+}
+
+void UEngineHelper::Profiler::profilePerformance(bool bScreen, float deltaTime){
+	UEngineHelper::Profiler::profileFPS(bScreen, deltaTime, FColor::Green);
+	UEngineHelper::Profiler::profileRAM(bScreen, deltaTime, FColor::Orange);
+	UEngineHelper::Profiler::profileCPU(bScreen, deltaTime, FColor::Blue);
+	UEngineHelper::Profiler::profileGPU(bScreen, deltaTime, FColor::Red);
+	UEngineHelper::Profiler::sampleCount++;
+}
+
+void UEngineHelper::Profiler::writeAvgsToLOG(){
+	float avgFPS = UEngineHelper::Profiler::totalFPS / UEngineHelper::Profiler::sampleCount,
+		avgCPU = UEngineHelper::Profiler::totalCPU / UEngineHelper::Profiler::sampleCount,
+		avgRAM = UEngineHelper::Profiler::totalRAM / UEngineHelper::Profiler::sampleCount,
+		avgUsedVRAM = UEngineHelper::Profiler::totalUsedVRAM / UEngineHelper::Profiler::sampleCount,
+		avgBudgetVRAM = UEngineHelper::Profiler::totalBudgetVRAM / UEngineHelper::Profiler::sampleCount,
+		avgPercentVRAM = UEngineHelper::Profiler::totalPercentVRAM / UEngineHelper::Profiler::sampleCount;
+
+	UE_LOG(LogTemp, Warning, TEXT("Avg FPS: %.2f, Avg CPU: %.2f%%, Avg RAM: %.2f MB"), avgFPS, avgCPU, avgRAM);
+	UE_LOG(LogTemp, Warning, TEXT("Avg used VRAM: %.2f MB, Avg budget VRAM: %.2f MB, Avg % VRAM: %.2f%%"), avgUsedVRAM, avgBudgetVRAM, avgPercentVRAM);
 }

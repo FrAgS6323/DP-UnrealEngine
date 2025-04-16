@@ -1,5 +1,13 @@
 #pragma once
-
+#include <Windows.h>
+#include <pdh.h>
+#pragma comment(lib, "pdh.lib")
+#include "RHI.h"
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include <d3d12.h>
+#include <dxgi1_4.h>
+#include <dxgi1_6.h>
+#include "Windows/HideWindowsPlatformTypes.h"
 #include "CoreMinimal.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "EngineHelper.generated.h"
@@ -8,6 +16,26 @@ UCLASS()
 class TUBEUE_API UEngineHelper : public UObject {
 	GENERATED_BODY()
 	public:
+		class Profiler {
+			private:
+				inline static int32 sampleCount = 0;
+				inline static float totalFPS = 0.f;
+				inline static float totalCPU = 0.f;
+				inline static float totalRAM = 0.f;
+				inline static float totalUsedVRAM = 0.f;
+				inline static float totalBudgetVRAM = 0.f;
+				inline static float totalPercentVRAM = 0.f;
+				inline static PDH_HQUERY cpuQuery;
+				inline static PDH_HCOUNTER cpuTotal;
+				static void profileFPS(bool bScreen, float delatTime, FColor color);
+				static void profileRAM(bool bScreen, float delatTime, FColor color);
+				static void profileCPU(bool bScreen, float delatTime, FColor color);
+				static void profileGPU(bool bScreen, float delatTime, FColor color);
+			public:
+				static void initCPUprofiler();
+				static void profilePerformance(bool bScreen, float deltaTime);
+				static void writeAvgsToLOG();
+		};
 		static void loadMeshStatic(const TCHAR* path, UStaticMeshComponent* parentComp);
 		static void loadMeshDynamic(const TCHAR* path, UStaticMeshComponent* parentComp);
 		static auto loadMaterialDynamic(const TCHAR* path) -> UMaterialInterface*;
@@ -42,22 +70,4 @@ class TUBEUE_API UEngineHelper : public UObject {
 									  TSubclassOf<AActor> actorClass, 
 									  size_t index) -> TObjectPtr<AActor>;
 		static void setSpectatorCameraSpeed(APlayerController* playerController, float speed);
-
-		template<typename T>
-		static auto spawnActor(UWorld* world,
-							   FName name,
-							   FVector location,
-							   FRotator rotation,
-							   AActor* owner) -> T* {
-			if(!world) return nullptr;
-			location = owner ? owner->GetActorLocation() + location : location;
-			rotation = owner ? owner->GetActorRotation() + rotation : rotation;
-
-			FActorSpawnParameters spawnParams;
-			spawnParams.Owner = owner;
-			spawnParams.Instigator = owner ? owner->GetInstigator() : nullptr;
-			spawnParams.Name = name;
-
-			return world->SpawnActor<T>(T::StaticClass(), location, rotation, spawnParams);
-		}	
 };

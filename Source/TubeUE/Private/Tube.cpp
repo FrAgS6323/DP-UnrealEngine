@@ -5,9 +5,12 @@
 #include <numbers>
 #include <Kismet/GameplayStatics.h>
 #include "Kismet/KismetMathLibrary.h"
+#include "Trace/Trace.h"
 
 ATube::ATube(){
 	PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.TickInterval = 0.013f;
+
     this->RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponentTube"));
 	this->sTubeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MergedTubeMesh"));
     this->sHolderMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HolderMesh"));
@@ -38,13 +41,11 @@ ATube::ATube(){
 #endif
 
     this->webHandler = new WebHandler(TEXT("http://147.232.60.231:5001/tubeDataAPI"), WebHandler::eRequestType::GET);
-    //this->webHandler->setFunctorOnProcessRequestComplete(this, functor);
 }
 
 void ATube::BeginPlay(){
 	Super::BeginPlay();
-
-//#if 0
+    
     if (!this->widgetComponent) {
         TArray<UWidgetComponent*> WidgetComponents;
         GetComponents<UWidgetComponent>(WidgetComponents);
@@ -75,7 +76,7 @@ void ATube::BeginPlay(){
                     idealPIDCheckBox->OnCheckStateChanged.AddDynamic(this, &ATube::bindOnidealPIDCheckboxChange);
 
                     UCheckBox* bCoordCheckBox = Cast<UCheckBox>(homeWidget->GetWidgetFromName(TEXT("bCoord")));
-                    bCoordCheckBox->OnCheckStateChanged.AddDynamic(this, &ATube::bindOnidealCoordsCheckboxChange);
+                    bCoordCheckBox->OnCheckStateChanged.AddDynamic(this, &ATube::bindOnCoordsCheckboxChange);
 
                     UEditableTextBox* editableBoxHeight = Cast<UEditableTextBox>(homeWidget->GetWidgetFromName(TEXT("HeightInput")));
                     editableBoxHeight->OnTextCommitted.AddDynamic(this, &ATube::bindOnTextCommitHeight);
@@ -109,23 +110,20 @@ void ATube::BeginPlay(){
             UE_LOG(LogTemp, Warning, TEXT("WidgetTube correctly initialized!"));
         }
     }
-//#endif
 }
 
 void ATube::funcForWebHandler(FHttpRequestPtr request, FHttpResponsePtr response, bool connected){
-    this->reqData.request = request;
-    this->reqData.response = response;
-    this->reqData.connected = connected;
+    if (response.IsValid()) {
+        TSharedRef<TJsonReader<>> jsonReader = TJsonReaderFactory<>::Create(response->GetContentAsString());
+        FJsonSerializer::Deserialize(jsonReader, this->responseObj);
 
-#if 0
-    TSharedPtr<FJsonObject> responseObj;
-    TSharedRef<TJsonReader<>> jsonReader = TJsonReaderFactory<>::Create(response->GetContentAsString());
-    FJsonSerializer::Deserialize(jsonReader, responseObj);
+        FString value;
+        if (this->responseObj->TryGetStringField("target", value)) LexTryParseString(this->desiredHeight, *value);
+        if (this->responseObj->TryGetStringField("height", value)) LexTryParseString(this->vizActualHeight, *value);
+        if (this->responseObj->TryGetStringField("angle", value)) LexTryParseString(this->angle, *value);
 
-    //UE_LOG(LogTemp, Warning, TEXT("response: %s"), *this->reqData.response->GetContentAsString());
-    UE_LOG(LogTemp, Warning, TEXT("parsed-> target: %s"), *responseObj->GetStringField("target"));
-#endif
-
+        //UE_LOG(LogTemp, Warning, TEXT("parsed-> target: %s"), *this->responseObj->GetStringField("target"));
+    }
 }
 
 void ATube::initialize(){
@@ -175,6 +173,54 @@ void ATube::initialize(){
         this->sBallMesh->SetMobility(EComponentMobility::Movable);
         this->sBallMesh->SetMassOverrideInKg(NAME_None, 0.0027f, true);
         this->sBallMesh->BodyInstance.bAutoWeld = false;
+    }
+}
+
+void ATube::setMeshesPhysicsAndGravity(bool bState){
+    if (bState){
+        this->sHolderMesh->SetSimulatePhysics(bState);
+        this->sTubeMesh->SetSimulatePhysics(bState);
+        this->sBallMesh->SetSimulatePhysics(bState);
+
+        this->sHolderMesh->WakeAllRigidBodies();
+        this->sTubeMesh->WakeAllRigidBodies();
+        this->sBallMesh->WakeAllRigidBodies();
+
+        this->sHolderMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+        this->sTubeMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+        this->sBallMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+
+        this->sHolderMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+        this->sTubeMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+        this->sBallMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+
+        this->sHolderMesh->SetEnableGravity(bState);
+        this->sTubeMesh->SetEnableGravity(bState);
+        this->sBallMesh->SetEnableGravity(bState);
+    }else{
+        FTransform savedHolderTransform = this->sHolderMesh->GetComponentTransform(),
+            savedTubeTransform = this->sTubeMesh->GetComponentTransform(),
+            savedBallTransform = this->sBallMesh->GetComponentTransform();
+
+        this->sHolderMesh->SetWorldTransform(savedHolderTransform, false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+        this->sTubeMesh->SetWorldTransform(savedTubeTransform, false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+        this->sBallMesh->SetWorldTransform(savedBallTransform, false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+
+        this->sHolderMesh->SetSimulatePhysics(bState);
+        this->sTubeMesh->SetSimulatePhysics(bState);
+        this->sBallMesh->SetSimulatePhysics(bState);
+
+        this->sHolderMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+        this->sTubeMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+        this->sBallMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+
+        this->sHolderMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+        this->sTubeMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+        this->sBallMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+
+        this->sHolderMesh->SetEnableGravity(bState);
+        this->sTubeMesh->SetEnableGravity(bState);
+        this->sBallMesh->SetEnableGravity(bState);
     }
 }
 
@@ -264,7 +310,6 @@ void ATube::PIDBall(float deltaTime) {
 
     double error = UPID::estimateError(this->desiredHeight, this->distance),
            output = this->pidControllerBall ? this->pidControllerBall->getPIDOutput(error, (double)deltaTime) : 0;
-    
     //UE_LOG(LogTemp, Warning, TEXT("PID Ball error: = %f"), error);
     //UE_LOG(LogTemp, Warning, TEXT("PID Ball output: = %f"), output);
     if (this->sBallMesh && this->bHit) this->sBallMesh->AddForce(this->splitBallForce(output, this->sTubeMesh->GetComponentRotation().Roll));
@@ -282,28 +327,6 @@ void ATube::PIDServo(float deltaTime) {
     //UE_LOG(LogTemp, Warning, TEXT("PID Servo error: = %f"), error);
     //UE_LOG(LogTemp, Warning, TEXT("PID Servo output: = %f"), output);
     if (this->sTubeMesh) this->sTubeMesh->AddTorqueInRadians(FVector(output, 0.0, 0.0), NAME_None, false);
-}
-
-void ATube::rotate(double inAngleDeg){
-    if (std::abs(inAngleDeg) > this->maxAngle) std::runtime_error("Wrong angle!");
-
-    FRotator currentRotation = this->sTubeMesh->GetComponentRotation();
-    double roundCurrRotation = round(currentRotation.Roll),
-           deltaAngleDeg = inAngleDeg - roundCurrRotation;
-
-    if (inAngleDeg != this->angle) {
-        if (deltaAngleDeg < 0 && roundCurrRotation != inAngleDeg) this->angle -= this->numRotationVel;
-        else if (deltaAngleDeg > 0 && roundCurrRotation != inAngleDeg) this->angle += this->numRotationVel;
-    }
-    //UE_LOG(LogTemp, Warning, TEXT("AngleDeg: %f currRotRoll: %f  roundCurrRotation: %f delta: %f"), this->angle, currentRotation.Roll, roundCurrRotation, deltaAngleDeg);
-
-    FRotator newRotation = FRotator(currentRotation.Pitch,
-                                    currentRotation.Yaw,
-                                    45.0);
-
-    this->sTubeMesh->SetWorldTransform(FTransform(newRotation, this->sTubeMesh->GetComponentLocation()), false, nullptr, ETeleportType::None);
-    
-    //this->sTubeMesh->SetPhysicsAngularVelocityInDegrees(FVector(angle, 0.0f, 0.0f), false);
 }
 
 void ATube::convertXYToHeightAngle(double x,
@@ -374,13 +397,13 @@ void ATube::convertHeightAngleToXY(double inHeight,
 void ATube::rotateWidgetToFaceCamera() {
     if (!this->widgetComponent) return;
 
-    FVector CameraLocation = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->GetCameraLocation();
-    FVector WidgetLocation = this->widgetComponent->GetComponentLocation();
+    FVector cameraLocation = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->GetCameraLocation();
+    FVector widgetLocation = this->widgetComponent->GetComponentLocation();
 
-    FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(WidgetLocation, CameraLocation);
-    LookAtRotation.Pitch = 0.f;
-    LookAtRotation.Roll = 0.f; 
-    this->widgetComponent->SetWorldRotation(LookAtRotation);
+    FRotator lookAtRotation = UKismetMathLibrary::FindLookAtRotation(widgetLocation, cameraLocation);
+    lookAtRotation.Pitch = 0.f;
+    lookAtRotation.Roll = 0.f; 
+    this->widgetComponent->SetWorldRotation(lookAtRotation);
 }
 
 void ATube::bindOnButtonSimClick() {
@@ -406,7 +429,7 @@ void ATube::bindOnidealPIDCheckboxChange(bool bIsChecked) {
     this->bSetIdealBallPID = bIsChecked;
 }
 
-void ATube::bindOnidealCoordsCheckboxChange(bool bIsChecked) {
+void ATube::bindOnCoordsCheckboxChange(bool bIsChecked) {
     this->bCoords = bIsChecked;
 }
 
@@ -468,7 +491,6 @@ void ATube::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
 
     this->widgetComponent->SetVisibility(this->bIsActive);
-    //this->SetActorTickInterval(-10.0f);
     
     this->bSetIdealBallPID
         ? 
@@ -485,6 +507,7 @@ void ATube::Tick(float DeltaTime){
     this->pidControllerServo->setSaturationLimits(this->saturationLimitServoMin, this->saturationLimitServoMax);
 
     if (ERunningModesTube::SIMULATION == this->mode) {
+        //this->setMeshesPhysicsAndGravity(true);
         this->performRaycast();
 
         if (!this->bCoords) {
@@ -503,27 +526,50 @@ void ATube::Tick(float DeltaTime){
 
         this->PIDBall(DeltaTime);
         this->PIDServo(DeltaTime);
-        //this->rotate(this->inAngle);
     }
     else if (ERunningModesTube::VISUALIZATION == this->mode){
+        double ballX, 
+               ballY;
+
+        //this->setMeshesPhysicsAndGravity(false);
+
         this->onReqCompleteFunctor = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
             this->funcForWebHandler(request, response, connected);
         };
-        this->webHandler->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctor);
-
+        this->webHandler->initRequest();
+        this->webHandler->setFunctorOnProcessRequestComplete(this, MakeShared<TFunction<void(FHttpRequestPtr, FHttpResponsePtr, bool)>>(MoveTemp(this->onReqCompleteFunctor)));
         this->webHandler->sendRequest();
 
+        this->convertHeightAngleToXY(this->vizActualHeight, this->angle, ballX, ballY);
+        UE_LOG(LogTemp, Warning, TEXT("height: %f, angle: %f, conX: %f conY: %f"), this->vizActualHeight, this->angle, ballX, ballY);
+
+        this->sHolderMesh->SetWorldLocation(this->GetActorLocation());
+        this->sHolderMesh->SetRelativeRotation(FRotator(0, 180, 0));
+        this->sBallMesh->SetWorldLocation(FVector(this->GetActorLocation().X - 6.0, this->GetActorLocation().Y + ballX, this->GetActorLocation().Z + ballY));
+        this->sTubeMesh->SetWorldLocation(FVector(this->GetActorLocation().X - 6.0, this->GetActorLocation().Y, this->GetActorLocation().Z));
+        this->sTubeMesh->SetWorldRotation(this->GetActorRotation().Add(0.0, 0.0, this->angle));
+
+#if 0
         if (this->reqData.response.IsValid()){
             UE_LOG(LogTemp, Display, TEXT("Response Tube: = %s"), *this->reqData.response->GetContentAsString());
         }
         else {
             UE_LOG(LogTemp, Display, TEXT("Response Tube not valid"));
         }
+#endif
     }
     else{
+        //this->setMeshesPhysicsAndGravity(true);
+        this->onReqCompleteFunctor = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
+            this->funcForWebHandler(request, response, connected);
+        };
+        this->webHandler->initRequest();
+        this->webHandler->setFunctorOnProcessRequestComplete(this, MakeShared<TFunction<void(FHttpRequestPtr, FHttpResponsePtr, bool)>>(MoveTemp(this->onReqCompleteFunctor)));
+        this->webHandler->sendRequest();
 
+        this->PIDBall(DeltaTime);
+        this->PIDServo(DeltaTime);
     }
-
     this->rotateWidgetToFaceCamera();
 }
 

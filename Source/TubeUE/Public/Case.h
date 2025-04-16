@@ -18,6 +18,7 @@ class TUBEUE_API ACase : public AActor
 	GENERATED_BODY()
 	private:
 		bool bIsActive = false;
+		int32 displayUpNum, displayDownNum;
 		static constexpr size_t displaySize = 5;
 		typedef struct matElementData {
 			bool bSwitch;
@@ -37,8 +38,8 @@ class TUBEUE_API ACase : public AActor
 						rightRedKnob;
 		TArray<MatElementData> sevenSegOne, sevenSegTwo;
 		TArray<TArray<MatElementData>> displayUp, displayDown;
+		TSharedPtr<FJsonObject> responseObj;
 		WebHandler* webHandler;
-		WebHandler::ReqData reqData;
 		TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> onReqCompleteFunctor;
 		void initSegArray(TArray<MatElementData>& segArray, 
 						  const TArray<int>& slots, 
@@ -53,8 +54,6 @@ class TUBEUE_API ACase : public AActor
 		void numToDisplay(const int& num, TArray<TArray<MatElementData>>& display);
 		void renderSegArray(const TArray<MatElementData>& segArray);
 		void renderDisplay(const TArray<TArray<MatElementData>> &display);
-		void clearSegArray(const TArray<MatElementData>& segArray);
-		void clearDisplay(const TArray<TArray<MatElementData>>& display);
 		void renderMaterials();
 		void funcForWebHandler(FHttpRequestPtr request, FHttpResponsePtr response, bool connected);
 		//TObjectPtr<UPointLightComponent> pointLight;
@@ -75,8 +74,8 @@ class TUBEUE_API ACase : public AActor
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Knobs") bool bLeftRedKnob;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SevenSegDisplays") int sevenSegOneNum;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SevenSegDisplays") int sevenSegTwoNum;
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Displays") int displayUpNum;
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Displays") int displayDownNum;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Displays") int setDisplayUpNum;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Displays") int setDisplayDownNum;
 		UPROPERTY(EditAnywhere, Category = "Runnning Mode") ERunningModesCase mode = ERunningModesCase::SIMULATION;
 		void setActive(bool bActive);
 		virtual void Tick(float DeltaTime) override;
