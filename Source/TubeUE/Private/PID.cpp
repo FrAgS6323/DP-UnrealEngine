@@ -2,6 +2,7 @@
 
 UPID::UPID(ePIDusage usage):
 	clamp(false),
+	bFirstRun(true),
 	usage(usage),
 	p(0.0),
 	i(0.0),
@@ -41,6 +42,13 @@ bool UPID::setPIDvalues(double P,
 	return change;
 }
 
+void UPID::reset(){
+	this->p = 0.0;
+	this->i = 0.0;
+	this->d = 0.0;
+	this->error = 0.0;
+}
+
 void UPID::setSaturationLimits(double min, double max){
 	this->saturationLimitMin = min;
 	this->saturationLimitMax = max;
@@ -65,10 +73,15 @@ double UPID::getPIDOutput(double currentError, double deltaTime) {
 	this->p = currentError;
 
 	if (!this->clamp) this->i += currentError * deltaTime;
-
-	this->d = (currentError - this->error) / deltaTime;
-
-	this->error = currentError;
+	
+	if (this->bFirstRun) {
+		this->error = currentError;
+		this->d = 0.0;
+		this->bFirstRun = false;
+	}else{
+		this->d = (currentError - this->error) / deltaTime;
+		this->error = currentError;
+	}
 
 	double preSaturationFilterValue = this->p * this->kP +
 		this->i * this->kI +

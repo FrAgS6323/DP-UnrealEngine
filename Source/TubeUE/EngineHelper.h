@@ -70,4 +70,5 @@ class TUBEUE_API UEngineHelper : public UObject {
 									  TSubclassOf<AActor> actorClass, 
 									  size_t index) -> TObjectPtr<AActor>;
 		static void setSpectatorCameraSpeed(APlayerController* playerController, float speed);
+		static void setKinematicTarget(UStaticMeshComponent* component, bool bState);
 };

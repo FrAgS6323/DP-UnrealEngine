@@ -6,7 +6,8 @@ enum class ePIDusage { HEIGHT, ANGLE };
 
 class TUBEUE_API UPID{
 	private:
-		bool clamp;
+		bool clamp,
+			 bFirstRun;
 		double kP,
 			   kI,
 			   kD,
@@ -31,6 +32,7 @@ class TUBEUE_API UPID{
 		bool setPIDvalues(double P,
 						  double I,
 						  double D);
+		void reset();
 		bool setIdealPIDvalues();
 		void setSaturationLimits(double min, double max);
 		double getPIDOutput(double currentError, double deltaTime);

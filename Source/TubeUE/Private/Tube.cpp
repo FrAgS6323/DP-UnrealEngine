@@ -177,7 +177,7 @@ void ATube::initialize(){
 }
 
 void ATube::setMeshesPhysicsAndGravity(bool bState){
-    if (bState){
+    if (bState && !this->bPhysicsIsSet){
         this->sHolderMesh->SetSimulatePhysics(bState);
         this->sTubeMesh->SetSimulatePhysics(bState);
         this->sBallMesh->SetSimulatePhysics(bState);
@@ -197,6 +197,8 @@ void ATube::setMeshesPhysicsAndGravity(bool bState){
         this->sHolderMesh->SetEnableGravity(bState);
         this->sTubeMesh->SetEnableGravity(bState);
         this->sBallMesh->SetEnableGravity(bState);
+
+        this->bPhysicsIsSet = true;
     }else{
         FTransform savedHolderTransform = this->sHolderMesh->GetComponentTransform(),
             savedTubeTransform = this->sTubeMesh->GetComponentTransform(),
@@ -221,6 +223,7 @@ void ATube::setMeshesPhysicsAndGravity(bool bState){
         this->sHolderMesh->SetEnableGravity(bState);
         this->sTubeMesh->SetEnableGravity(bState);
         this->sBallMesh->SetEnableGravity(bState);
+        this->bPhysicsIsSet = false;
     }
 }
 
@@ -304,7 +307,10 @@ void ATube::PIDBall(float deltaTime) {
         (this->desiredHeight < 0))
         UE_LOG(LogTemp, Warning, TEXT("Wrong input! (Expected between 0 and %f)"), this->getRegulationHeight());
 //#endif
-    if (!this->pidControllerBall) UE_LOG(LogTemp, Warning, TEXT("UPID for ball not initialized!"));
+    if (!this->pidControllerBall) {
+        UE_LOG(LogTemp, Warning, TEXT("UPID for ball not initialized!"));
+        return;
+    }
 
     if (!this->bPidBallSwitch) return;
 
@@ -318,14 +324,19 @@ void ATube::PIDBall(float deltaTime) {
 void ATube::PIDServo(float deltaTime) {
     if (std::abs(this->angle) > this->maxAngle) UE_LOG(LogTemp, Warning, TEXT("Wrong angle! (Expected between -%f and %f)"), this->maxAngle, this->maxAngle);
 
-    if (!this->pidControllerServo) UE_LOG(LogTemp, Warning, TEXT("UPID for servo not initialized!"));
+    if (!this->pidControllerServo) {
+        UE_LOG(LogTemp, Warning, TEXT("UPID for servo not initialized!"));
+        return;
+    }
 
     FRotator currentRotation = this->sTubeMesh->GetComponentRotation();
     double error = UPID::estimateError(this->angle, currentRotation.Roll),
         output = this->pidControllerServo ? this->pidControllerServo->getPIDOutput(error, (double)deltaTime) : 0;
-
-    //UE_LOG(LogTemp, Warning, TEXT("PID Servo error: = %f"), error);
-    //UE_LOG(LogTemp, Warning, TEXT("PID Servo output: = %f"), output);
+    
+    UE_LOG(LogTemp, Warning, TEXT("PID desiredAngle: = %f"), this->angle);
+    UE_LOG(LogTemp, Warning, TEXT("PID currentAngle: = %f"), currentRotation.Roll);
+    UE_LOG(LogTemp, Warning, TEXT("PID Servo error: = %f"), error);
+    UE_LOG(LogTemp, Warning, TEXT("PID Servo output: = %f\n"), output);
     if (this->sTubeMesh) this->sTubeMesh->AddTorqueInRadians(FVector(output, 0.0, 0.0), NAME_None, false);
 }
 
@@ -409,16 +420,19 @@ void ATube::rotateWidgetToFaceCamera() {
 void ATube::bindOnButtonSimClick() {
     this->mode = ERunningModesTube::SIMULATION;
     if (this->widgetSwitcher) this->widgetSwitcher->SetActiveWidgetIndex(0);
+    this->bChangeMode = true;
 }
 
 void ATube::bindOnButtonVizClick() {
     this->mode = ERunningModesTube::VISUALIZATION;
     if (this->widgetSwitcher) this->widgetSwitcher->SetActiveWidgetIndex(1);
+    this->bChangeMode = true;
 }
 
 void ATube::bindOnButtonSimIRLClick() {
     this->mode = ERunningModesTube::SIM_IN_REAL_TIME;
     if(this->widgetSwitcher) this->widgetSwitcher->SetActiveWidgetIndex(2);
+    this->bChangeMode = true;
 }
 
 void ATube::bindOnRegCheckboxChange(bool bIsChecked) {
@@ -507,6 +521,24 @@ void ATube::Tick(float DeltaTime){
     this->pidControllerServo->setSaturationLimits(this->saturationLimitServoMin, this->saturationLimitServoMax);
 
     if (ERunningModesTube::SIMULATION == this->mode) {
+        if (this->bChangeMode) {
+            UEngineHelper::setKinematicTarget(this->sHolderMesh, false);
+            UEngineHelper::setKinematicTarget(this->sTubeMesh, false);
+            UEngineHelper::setKinematicTarget(this->sBallMesh, false);
+            UEngineHelper::setupConstraint(this->tubeJoint,
+                this->sHolderMesh,
+                this->sHolderMesh,
+                this->sTubeMesh,
+                ELinearConstraintMotion::LCM_Locked, 0.0f,
+                ELinearConstraintMotion::LCM_Locked, 0.0f,
+                ELinearConstraintMotion::LCM_Locked, 0.0f,
+                EAngularConstraintMotion::ACM_Locked, 0.0f,
+                EAngularConstraintMotion::ACM_Locked, 0.0f,
+                EAngularConstraintMotion::ACM_Free, 0.0f);
+            this->pidControllerBall->reset();
+            this->pidControllerServo->reset();
+            this->bChangeMode = false;
+        }
         //this->setMeshesPhysicsAndGravity(true);
         this->performRaycast();
 
@@ -530,7 +562,13 @@ void ATube::Tick(float DeltaTime){
     else if (ERunningModesTube::VISUALIZATION == this->mode){
         double ballX, 
                ballY;
-
+        
+        if (this->bChangeMode){
+            UEngineHelper::setKinematicTarget(this->sHolderMesh, true);
+            UEngineHelper::setKinematicTarget(this->sTubeMesh, true);
+            UEngineHelper::setKinematicTarget(this->sBallMesh, true);
+            this->bChangeMode = false;
+        }
         //this->setMeshesPhysicsAndGravity(false);
 
         this->onReqCompleteFunctor = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
@@ -557,8 +595,25 @@ void ATube::Tick(float DeltaTime){
             UE_LOG(LogTemp, Display, TEXT("Response Tube not valid"));
         }
 #endif
-    }
-    else{
+    }else{
+        if (this->bChangeMode) {
+            UEngineHelper::setKinematicTarget(this->sHolderMesh, false);
+            UEngineHelper::setKinematicTarget(this->sTubeMesh, false);
+            UEngineHelper::setKinematicTarget(this->sBallMesh, false);
+            UEngineHelper::setupConstraint(this->tubeJoint,
+                this->sHolderMesh,
+                this->sHolderMesh,
+                this->sTubeMesh,
+                ELinearConstraintMotion::LCM_Locked, 0.0f,
+                ELinearConstraintMotion::LCM_Locked, 0.0f,
+                ELinearConstraintMotion::LCM_Locked, 0.0f,
+                EAngularConstraintMotion::ACM_Locked, 0.0f,
+                EAngularConstraintMotion::ACM_Locked, 0.0f,
+                EAngularConstraintMotion::ACM_Free, 0.0f);
+            this->pidControllerBall->reset();
+            this->pidControllerServo->reset();
+            this->bChangeMode = false;
+        }
         //this->setMeshesPhysicsAndGravity(true);
         this->onReqCompleteFunctor = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
             this->funcForWebHandler(request, response, connected);

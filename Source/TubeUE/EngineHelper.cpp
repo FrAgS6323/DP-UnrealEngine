@@ -1,4 +1,4 @@
-#include "EngineHelper.h"
+﻿#include "EngineHelper.h"
 #include "Math/UnrealMathUtility.h"
 #include "Kismet/GameplayStatics.h"
 #include <numbers>
@@ -149,6 +149,19 @@ void UEngineHelper::setSpectatorCameraSpeed(APlayerController* playerController,
 	if (spectatorPawn){
 		UFloatingPawnMovement* MoveComp = spectatorPawn->FindComponentByClass<UFloatingPawnMovement>();
 		if (MoveComp) MoveComp->MaxSpeed = speed;
+	}
+}
+
+void UEngineHelper::setKinematicTarget(UStaticMeshComponent *component, bool bState){
+	if (bState){
+		component->SetSimulatePhysics(false);
+		component->SetMobility(EComponentMobility::Movable);
+		component->SetCollisionEnabled(ECollisionEnabled::NoCollision);  // voliteľné
+	}else{
+		component->SetPhysicsLinearVelocity(FVector::ZeroVector);
+		component->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+		component->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);  // ak si ho predtým vypol
+		component->SetSimulatePhysics(true);
 	}
 }
 

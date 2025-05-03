@@ -48,10 +48,11 @@ ACase::ACase() {
 	this->sCaseMesh->SetMobility(EComponentMobility::Movable);
 	this->sCaseMesh->SetMassOverrideInKg(NAME_None, 10.0f, true);
 
-	this->webHandler = new WebHandler(TEXT("http://147.232.60.231:5001/kuforDataAPI"), WebHandler::eRequestType::GET);
+	this->webHandlerGet = new WebHandler(TEXT("http://147.232.60.231:5001/kuforDataAPI"), WebHandler::eRequestType::GET);
+	this->webHandlerPost = new WebHandler(TEXT("http://147.232.60.231:5001/kuforSend"), WebHandler::eRequestType::POST);
 }
 
-void ACase::funcForWebHandler(FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
+void ACase::funcForWebHandlerGet(FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
 	if (response.IsValid()) {
 		TSharedRef<TJsonReader<>> jsonReader = TJsonReaderFactory<>::Create(response->GetContentAsString());
 		FJsonSerializer::Deserialize(jsonReader, this->responseObj);
@@ -70,10 +71,9 @@ void ACase::funcForWebHandler(FHttpRequestPtr request, FHttpResponsePtr response
 			LexTryParseString(this->displayDownNum, *value); 
 			this->displayDownNum *= 2; 
 		}
-		if(true){}
-		else while (true) {}
+		//if(true){}
+		//else while (true) {}
 		
-
 		if (this->responseObj->TryGetStringField("Local:3:O.Data.8", value)) this->leftGreenLed.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
 		if (this->responseObj->TryGetStringField("Local:3:O.Data.9", value)) this->middleGreenLed.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
 		if (this->responseObj->TryGetStringField("Local:3:O.Data.10", value)) this->rightGreenLed.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
@@ -98,6 +98,14 @@ void ACase::funcForWebHandler(FHttpRequestPtr request, FHttpResponsePtr response
 		if (this->responseObj->TryGetStringField("Local:3:O.Data.6", value)) this->sevenSegTwo[5].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //f
 		if (this->responseObj->TryGetStringField("Local:3:O.Data.7", value)) this->sevenSegTwo[6].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //g
 		if (this->responseObj->TryGetStringField("Local:3:O.Data.3", value)) this->sevenSegTwo[7].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //.
+	}
+}
+
+void ACase::funcForWebHandlerPost(FHttpRequestPtr request, FHttpResponsePtr response, bool connected){
+	if (response.IsValid()){
+		UE_LOG(LogTemp, Warning, TEXT("POST Response: %s"), *response->GetContentAsString());
+	}else{
+		UE_LOG(LogTemp, Error, TEXT("No response received"));
 	}
 }
 
@@ -249,7 +257,7 @@ void ACase::numToDisplay(const int& num, TArray<TArray<MatElementData>>& display
 	TArray<int> digits = this->numToDigits(num);
 
 	if (digits.Num() > 5){
-		UE_LOG(LogTemp, Warning, TEXT("U must enter number below 5 digits!"));
+		UE_LOG(LogTemp, Warning, TEXT("You must enter number below 5 digits!"));
 		return;
 	}
 
@@ -314,12 +322,87 @@ void ACase::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
 
 	if (ERunningModesCase::VISUALIZATION == this->mode){
-		this->onReqCompleteFunctor = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
-			this->funcForWebHandler(request, response, connected);
+		this->onReqCompleteFunctorGet = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
+			this->funcForWebHandlerGet(request, response, connected);
 		};
-		this->webHandler->initRequest();
-		this->webHandler->setFunctorOnProcessRequestComplete(this, MakeShared<TFunction<void(FHttpRequestPtr, FHttpResponsePtr, bool)>>(MoveTemp(this->onReqCompleteFunctor)));
-		this->webHandler->sendRequest();
+		this->webHandlerGet->initRequest();
+		this->webHandlerGet->setFunctorOnProcessRequestComplete(this, MakeShared<TFunction<void(FHttpRequestPtr, FHttpResponsePtr, bool)>>(MoveTemp(this->onReqCompleteFunctorGet)));
+		this->webHandlerGet->sendRequest();
+		
+		this->onReqCompleteFunctorPost = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
+			this->funcForWebHandlerPost(request, response, connected);
+		};
+
+//#if 0
+		if ((this->vizActualStates.bLeftGreenLED != this->bVizLeftGreenLed) ||
+			(this->vizActualStates.bMiddleGreenLED != this->bVizMiddleGreenLed) ||
+			(this->vizActualStates.bRightGreenLED != this->bVizRightGreenLed) ||
+			(this->vizActualStates.bRedButton != this->bVizRedButton) ||
+			(this->vizActualStates.bYellowButton != this->bVizYellowButton) ||
+			(this->vizActualStates.bGreenButton != this->bVizGreenButton) ||
+			(this->vizActualStates.bBlueButton != this->bVizBlueButton) ||
+			(this->vizActualStates.sevenSegOneNum != this->vizSevenSegOneNum) ||
+			(this->vizActualStates.sevenSegTwoNum != this->vizSevenSegTwoNum) ||
+			(this->vizActualStates.displayUpNum != this->vizSetDisplayUpNum) ||
+			(this->vizActualStates.displayDownNum != this->vizSetDisplayDownNum)) {
+
+			FcasePost data;
+			data.HL1 = this->bVizLeftGreenLed;
+			data.HL2 = this->bVizMiddleGreenLed;
+			data.HL3 = this->bVizRightGreenLed;
+			data.HL4 = this->bVizRedButton;
+			data.HL5 = this->bVizYellowButton;
+			data.HL6 = this->bVizGreenButton;
+			data.HL7 = this->bVizBlueButton;
+			data.H7seg1 = this->vizSevenSegOneNum;
+			data.H7seg2 = this->vizSevenSegTwoNum;
+			data.A1 = this->vizSetDisplayUpNum;
+			data.A2 = this->vizSetDisplayDownNum;
+
+			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->initRequest();
+			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, MakeShared<TFunction<void(FHttpRequestPtr, FHttpResponsePtr, bool)>>(MoveTemp(this->onReqCompleteFunctorPost)));
+			this->webHandlerPost->sendRequest();
+
+			this->vizActualStates.bLeftGreenLED = this->bVizLeftGreenLed;
+			this->vizActualStates.bMiddleGreenLED = this->bVizMiddleGreenLed;
+			this->vizActualStates.bRightGreenLED = this->bVizRightGreenLed;
+			this->vizActualStates.bRedButton = this->bVizRedButton;
+			this->vizActualStates.bYellowButton = this->bVizYellowButton;
+			this->vizActualStates.bGreenButton = this->bVizGreenButton;
+			this->vizActualStates.bBlueButton = this->bVizBlueButton;
+			this->vizActualStates.sevenSegOneNum = this->vizSevenSegOneNum;
+			this->vizActualStates.sevenSegTwoNum = this->vizSevenSegTwoNum;
+			this->vizActualStates.displayUpNum = this->vizSetDisplayUpNum;
+			this->vizActualStates.displayDownNum = this->vizSetDisplayDownNum;
+		}
+//#endif
+#if 0
+		TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+		Request->SetURL("http://147.232.60.231:5001/kuforSend");
+		Request->SetVerb("POST");
+
+		FString jsonStr = TEXT("{\"HL1\": 1}");
+
+		Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+		Request->SetContentAsString(jsonStr);
+
+		UE_LOG(LogTemp, Warning, TEXT("Header just before send: %s"), *Request->GetHeader(TEXT("Content-Type")));
+
+		Request->OnProcessRequestComplete().BindLambda([](FHttpRequestPtr Req, FHttpResponsePtr Resp, bool bSuccess)
+			{
+				if (Resp.IsValid())
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Response: %s"), *Resp->GetContentAsString());
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("No response received"));
+				}
+			});
+
+		Request->ProcessRequest();
+#endif
 	}else{
 		this->numToSegments(this->sevenSegOneNum, this->sevenSegOne);
 		this->numToSegments(this->sevenSegTwoNum, this->sevenSegTwo);

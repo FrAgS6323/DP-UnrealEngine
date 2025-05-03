@@ -8,7 +8,7 @@ public class TubeUE : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "EnhancedInput", "HTTP", "Json", "Slate", "SlateCore" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "EnhancedInput", "HTTP", "Json", "JsonUtilities", "Slate", "SlateCore" });
 
         PublicAdditionalLibraries.Add("dxgi.lib");
         PublicAdditionalLibraries.Add("d3d12.lib");

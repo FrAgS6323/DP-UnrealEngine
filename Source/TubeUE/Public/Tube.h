@@ -31,7 +31,8 @@ class TUBEUE_API ATube : public AActor{
 		bool bPidBallSwitch = false,
 			 bSetIdealBallPID = true,
 			 bCoords = false,
-			 bIsActive = false;
+			 bIsActive = false,
+			 bChangeMode = false;
 		int xBallPos = 0, 
 			yBallPos = 0;
 		inline static constexpr double motorHeight = 7.42;
@@ -52,7 +53,8 @@ class TUBEUE_API ATube : public AActor{
 			saturationLimitBallMax = 5.0,
 			saturationLimitServoMin = -1000.0,
 			saturationLimitServoMax = 1000.0;
-		bool bHit = true;
+		bool bHit = true,
+			 bPhysicsIsSet = false;
 		double distance, angle, desiredHeight, vizActualHeight;
 		TArray<double> regHeights;
 		ERunningModesTube mode = ERunningModesTube::SIMULATION;
