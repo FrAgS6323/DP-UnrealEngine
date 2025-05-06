@@ -61,43 +61,114 @@ void ACase::funcForWebHandlerGet(FHttpRequestPtr request, FHttpResponsePtr respo
 		//UE_LOG(LogTemp, Warning, TEXT("parsed-> EthernetC:1:O.1: %s"), *this->responseObj->GetStringField("EthernetC:1:O.1"));
 		FString value;
 
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.14", value)) this->blueButton.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.11", value)) this->redButton.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.12", value)) this->yellowButton.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.13", value)) this->greenButton.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
-
-		if (this->responseObj->TryGetStringField("Local:1:O.Ch0Data", value)) LexTryParseString(this->displayUpNum, *value);
-		if (this->responseObj->TryGetStringField("Local:1:O.Ch1Data", value)){ 
-			LexTryParseString(this->displayDownNum, *value); 
-			this->displayDownNum *= 2; 
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.14", value)){
+			this->blueButton.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+			if (this->vizRestActualStates.bBlueButton != this->blueButton.bSwitch) {
+				this->bVizBlueButton = this->blueButton.bSwitch;
+				this->vizRestActualStates.bBlueButton = this->bVizBlueButton;
+			}
 		}
-		//if(true){}
-		//else while (true) {}
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.11", value)){
+			this->redButton.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+			if (this->vizRestActualStates.bRedButton != this->redButton.bSwitch) {
+				this->bVizRedButton = this->redButton.bSwitch;
+				this->vizRestActualStates.bRedButton = this->bVizRedButton;
+			}
+		}
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.12", value)){
+			this->yellowButton.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+			if (this->vizRestActualStates.bYellowButton != this->yellowButton.bSwitch) {
+				this->bVizYellowButton = this->yellowButton.bSwitch;
+				this->vizRestActualStates.bYellowButton = this->bVizYellowButton;
+			}
+		}
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.13", value)) {
+			this->greenButton.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+			if (this->vizRestActualStates.bGreenButton != this->greenButton.bSwitch) {
+				this->bVizGreenButton = this->greenButton.bSwitch;
+				this->vizRestActualStates.bGreenButton = this->bVizGreenButton;
+			}
+		}
+		if (this->responseObj->TryGetStringField("Local:1:O.Ch0Data", value)) {
+			LexTryParseString(this->displayUpNum, *value);
+			if (this->vizRestActualStates.displayUpNum != this->displayUpNum){
+				this->vizSetDisplayUpNum = this->displayUpNum;
+				this->vizRestActualStates.displayUpNum = this->vizSetDisplayUpNum;
+			}
+			
+		}
+		if (this->responseObj->TryGetStringField("Local:1:O.Ch1Data", value)){ 
+			LexTryParseString(this->displayDownNum, *value);
+			if (this->vizRestActualStates.displayDownNum != this->displayDownNum) {
+				this->displayDownNum *= 2;
+				this->vizSetDisplayDownNum = this->displayDownNum;
+				this->vizRestActualStates.displayDownNum = this->vizSetDisplayDownNum;
+			}
+			
+		}	
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.8", value)) {
+			this->leftGreenLed.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+			if (this->vizRestActualStates.bLeftGreenLED != this->leftGreenLed.bSwitch) {
+				this->bVizLeftGreenLed = this->leftGreenLed.bSwitch;
+				this->vizRestActualStates.bLeftGreenLED = this->bVizLeftGreenLed;
+			}
+		}
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.9", value)) {
+			this->middleGreenLed.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+			if (this->vizRestActualStates.bMiddleGreenLED != this->middleGreenLed.bSwitch) {
+				this->bVizMiddleGreenLed = this->middleGreenLed.bSwitch;
+				this->vizRestActualStates.bMiddleGreenLED = this->bVizMiddleGreenLed;
+			}
+		}
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.10", value)) {
+			this->rightGreenLed.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+			if (this->vizRestActualStates.bRightGreenLED != this->rightGreenLed.bSwitch) {
+				this->bVizRightGreenLed = this->rightGreenLed.bSwitch;
+				this->vizRestActualStates.bRightGreenLED = this->bVizRightGreenLed;
+			}
+		}
 		
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.8", value)) this->leftGreenLed.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.9", value)) this->middleGreenLed.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.10", value)) this->rightGreenLed.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
+		TArray<bool> bSevenSegOne, bSevenSegTwo;
 
 		if (this->responseObj->TryGetStringField("Local:2:I.Data.3", value)) this->leftRedKnob.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
 		if (this->responseObj->TryGetStringField("Local:2:I.Data.5", value)) this->rightRedKnob.bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false;
 
-		if (this->responseObj->TryGetStringField("EthernetC:2:O.1", value)) this->sevenSegOne[0].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //a
-		if (this->responseObj->TryGetStringField("EthernetC:2:O.0", value)) this->sevenSegOne[1].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //b
-		if (this->responseObj->TryGetStringField("EthernetC:1:O.2", value)) this->sevenSegOne[2].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //c
-		if (this->responseObj->TryGetStringField("EthernetC:1:O.1", value)) this->sevenSegOne[3].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //d
-		if (this->responseObj->TryGetStringField("EthernetC:1:O.0", value)) this->sevenSegOne[4].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //e
-		if (this->responseObj->TryGetStringField("EthernetC:2:O.2", value)) this->sevenSegOne[5].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //f
-		if (this->responseObj->TryGetStringField("EthernetC:2:O.3", value)) this->sevenSegOne[6].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //g
-		if (this->responseObj->TryGetStringField("EthernetC:1:O.3", value)) this->sevenSegOne[7].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //.
+		if (this->responseObj->TryGetStringField("EthernetC:2:O.1", value)) bSevenSegOne.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //a
+		if (this->responseObj->TryGetStringField("EthernetC:2:O.0", value)) bSevenSegOne.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //b
+		if (this->responseObj->TryGetStringField("EthernetC:1:O.2", value)) bSevenSegOne.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //c
+		if (this->responseObj->TryGetStringField("EthernetC:1:O.1", value)) bSevenSegOne.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //d
+		if (this->responseObj->TryGetStringField("EthernetC:1:O.0", value)) bSevenSegOne.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //e
+		if (this->responseObj->TryGetStringField("EthernetC:2:O.2", value)) bSevenSegOne.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //f
+		if (this->responseObj->TryGetStringField("EthernetC:2:O.3", value)) bSevenSegOne.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //g
+		if (this->responseObj->TryGetStringField("EthernetC:1:O.3", value)) bSevenSegOne.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //.
 
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.5", value)) this->sevenSegTwo[0].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //a
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.4", value)) this->sevenSegTwo[1].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //b
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.2", value)) this->sevenSegTwo[2].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //c
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.1", value)) this->sevenSegTwo[3].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //d
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.0", value)) this->sevenSegTwo[4].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //e
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.6", value)) this->sevenSegTwo[5].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //f
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.7", value)) this->sevenSegTwo[6].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //g
-		if (this->responseObj->TryGetStringField("Local:3:O.Data.3", value)) this->sevenSegTwo[7].bSwitch = value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false; //.
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.5", value)) bSevenSegTwo.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //a
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.4", value)) bSevenSegTwo.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //b
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.2", value)) bSevenSegTwo.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //c
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.1", value)) bSevenSegTwo.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //d
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.0", value)) bSevenSegTwo.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //e
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.6", value)) bSevenSegTwo.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //f
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.7", value)) bSevenSegTwo.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //g
+		if (this->responseObj->TryGetStringField("Local:3:O.Data.3", value)) bSevenSegTwo.Add(value.Equals(TEXT("true"), ESearchCase::IgnoreCase) ? true : false); //.
+		
+		this->segmentsToNum(bSevenSegOne, this->vizInputActualStates.sevenSegOneNumGet);
+		this->segmentsToNum(bSevenSegTwo, this->vizInputActualStates.sevenSegTwoNumGet);
+		
+		if(-1 != this->vizInputActualStates.sevenSegOneNumGet){
+			for (size_t i = 0; i < bSevenSegOne.Num(); ++i) this->sevenSegOne[i].bSwitch = bSevenSegOne[i];
+			if (this->vizRestActualStates.sevenSegOneNum != this->vizInputActualStates.sevenSegOneNumGet) {
+				this->vizSevenSegOneNum = this->vizInputActualStates.sevenSegOneNumGet;
+				this->vizRestActualStates.sevenSegOneNum = this->vizInputActualStates.sevenSegOneNumGet;
+			}
+		}
+		
+		if (-1 != this->vizInputActualStates.sevenSegTwoNumGet) {
+			for (size_t i = 0; i < bSevenSegTwo.Num(); ++i) this->sevenSegTwo[i].bSwitch = bSevenSegTwo[i];
+			if (this->vizRestActualStates.sevenSegTwoNum != this->vizInputActualStates.sevenSegTwoNumGet) {
+				this->vizSevenSegTwoNum = this->vizInputActualStates.sevenSegTwoNumGet;
+				this->vizRestActualStates.sevenSegTwoNum = this->vizInputActualStates.sevenSegTwoNumGet;
+			}
+		}
 	}
 }
 
@@ -109,7 +180,7 @@ void ACase::funcForWebHandlerPost(FHttpRequestPtr request, FHttpResponsePtr resp
 	}
 }
 
-void ACase::initSegArray(TArray<MatElementData>& segArray, 
+void ACase::initSegArray(TArray<ACase::MatElementData>& segArray,
 						 const TArray<int>& slots, 
 						 const TCHAR* offMatPath,
 						 const TCHAR* onMatPath){
@@ -117,12 +188,12 @@ void ACase::initSegArray(TArray<MatElementData>& segArray,
 		segArray.Add({ false, slot, UEngineHelper::loadMaterialDynamic(offMatPath), UEngineHelper::loadMaterialDynamic(onMatPath) });
 }
 
-void ACase::initDisplay(TArray<TArray<MatElementData>> &display, 
+void ACase::initDisplay(TArray<TArray<ACase::MatElementData>> &display,
 					    const TArray<TArray<int>> &slots, 
 						const TCHAR* offMatPath,
 						const TCHAR* onMatPath){
 	for (size_t i = 0; i < ACase::displaySize; ++i) {
-		TArray<MatElementData> segArray;
+		TArray<ACase::MatElementData> segArray;
 
 		this->initSegArray(segArray, slots[i], offMatPath, onMatPath);
 		display.Add(segArray);
@@ -253,6 +324,20 @@ void ACase::numToSegments(const int &num, TArray<MatElementData> &segArray){
 	}
 }
 
+void ACase::segmentsToNum(const TArray<bool>& segArray, int& num){
+	if (segArray[0] && segArray[1] && segArray[2] && segArray[3] && segArray[4] && segArray[5] && !segArray[6]) num = 0;
+	else if (!segArray[0] && segArray[1] && segArray[2] && !segArray[3] && !segArray[4] && !segArray[5] && !segArray[6]) num = 1;
+	else if (segArray[0] && segArray[1] && !segArray[2] && segArray[3] && segArray[4] && !segArray[5] && segArray[6]) num = 2;
+	else if (segArray[0] && segArray[1] && segArray[2] && segArray[3] && !segArray[4] && !segArray[5] && segArray[6]) num = 3;
+	else if (!segArray[0] && segArray[1] && segArray[2] && !segArray[3] && !segArray[4] && segArray[5] && segArray[6]) num = 4;
+	else if (segArray[0] && !segArray[1] && segArray[2] && segArray[3] && !segArray[4] && segArray[5] && segArray[6]) num = 5;
+	else if (segArray[0] && !segArray[1] && segArray[2] && segArray[3] && segArray[4] && segArray[5] && segArray[6]) num = 6;
+	else if (segArray[0] && segArray[1] && segArray[2] && !segArray[3] && !segArray[4] && !segArray[5] && !segArray[6]) num = 7;
+	else if (segArray[0] && segArray[1] && segArray[2] && segArray[3] && segArray[4] && segArray[5] && segArray[6]) num = 8;
+	else if (segArray[0] && segArray[1] && segArray[2] && segArray[3] && !segArray[4] && segArray[5] && segArray[6]) num = 9;
+	else num = -1;
+}
+
 void ACase::numToDisplay(const int& num, TArray<TArray<MatElementData>>& display){
 	TArray<int> digits = this->numToDigits(num);
 
@@ -270,18 +355,18 @@ void ACase::numToDisplay(const int& num, TArray<TArray<MatElementData>>& display
 		this->numToSegments(digits[i], display[i + numOfEmptyDigits]);
 }
 
-void ACase::renderSegArray(const TArray<MatElementData>& segArray){
+void ACase::renderSegArray(const TArray<ACase::MatElementData>& segArray){
 	for (const auto& segment : segArray)
 		segment.bSwitch ? this->sCaseMesh->SetMaterial(segment.slot, segment.matOn) : this->sCaseMesh->SetMaterial(segment.slot, segment.matOff);
 }
 
-void ACase::renderDisplay(const TArray<TArray<MatElementData>>& display){
+void ACase::renderDisplay(const TArray<TArray<ACase::MatElementData>>& display){
 	for (const auto& segArray : display)
 		this->renderSegArray(segArray);
 }
 
 void ACase::renderMaterials(){
-	if (ERunningModesCase::SIMULATION == this->mode) {
+	if (ERunningModesCase::SIMULATION == this->mode){
 		this->bBlueButton ? this->sCaseMesh->SetMaterial(this->blueButton.slot, this->blueButton.matOn) : this->sCaseMesh->SetMaterial(this->blueButton.slot, this->blueButton.matOff);
 		this->bRedButton ? this->sCaseMesh->SetMaterial(this->redButton.slot, this->redButton.matOn) : this->sCaseMesh->SetMaterial(this->redButton.slot, this->redButton.matOff);
 		this->bGreenButton ? this->sCaseMesh->SetMaterial(this->greenButton.slot, this->greenButton.matOn) : this->sCaseMesh->SetMaterial(this->greenButton.slot, this->greenButton.matOff);
@@ -321,88 +406,139 @@ void ACase::setActive(bool bActive){
 void ACase::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
 
-	if (ERunningModesCase::VISUALIZATION == this->mode){
+	if (ERunningModesCase::VISUALIZATION == this->mode) {
 		this->onReqCompleteFunctorGet = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
 			this->funcForWebHandlerGet(request, response, connected);
 		};
+
 		this->webHandlerGet->initRequest();
 		this->webHandlerGet->setFunctorOnProcessRequestComplete(this, MakeShared<TFunction<void(FHttpRequestPtr, FHttpResponsePtr, bool)>>(MoveTemp(this->onReqCompleteFunctorGet)));
 		this->webHandlerGet->sendRequest();
-		
-		this->onReqCompleteFunctorPost = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
+
+		this->onReqCompleteFunctorPost = MakeShared<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>>([this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
 			this->funcForWebHandlerPost(request, response, connected);
-		};
+		});
 
-//#if 0
-		if ((this->vizActualStates.bLeftGreenLED != this->bVizLeftGreenLed) ||
-			(this->vizActualStates.bMiddleGreenLED != this->bVizMiddleGreenLed) ||
-			(this->vizActualStates.bRightGreenLED != this->bVizRightGreenLed) ||
-			(this->vizActualStates.bRedButton != this->bVizRedButton) ||
-			(this->vizActualStates.bYellowButton != this->bVizYellowButton) ||
-			(this->vizActualStates.bGreenButton != this->bVizGreenButton) ||
-			(this->vizActualStates.bBlueButton != this->bVizBlueButton) ||
-			(this->vizActualStates.sevenSegOneNum != this->vizSevenSegOneNum) ||
-			(this->vizActualStates.sevenSegTwoNum != this->vizSevenSegTwoNum) ||
-			(this->vizActualStates.displayUpNum != this->vizSetDisplayUpNum) ||
-			(this->vizActualStates.displayDownNum != this->vizSetDisplayDownNum)) {
-
+		if (this->vizInputActualStates.bLeftGreenLED != this->bVizLeftGreenLed) {
 			FcasePost data;
 			data.HL1 = this->bVizLeftGreenLed;
+
+			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->initRequest("HL1");
+			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
+			this->webHandlerPost->sendRequest();
+			this->vizInputActualStates.bLeftGreenLED = this->bVizLeftGreenLed;
+		}
+
+		else if (this->vizInputActualStates.bMiddleGreenLED != this->bVizMiddleGreenLed) {
+			FcasePost data;
 			data.HL2 = this->bVizMiddleGreenLed;
+
+			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->initRequest("HL2");
+			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
+			this->webHandlerPost->sendRequest();
+			this->vizInputActualStates.bMiddleGreenLED = this->bVizMiddleGreenLed;
+		}
+
+		else if (this->vizInputActualStates.bRightGreenLED != this->bVizRightGreenLed) {
+			FcasePost data;
 			data.HL3 = this->bVizRightGreenLed;
+
+			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->initRequest("HL3");
+			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
+			this->webHandlerPost->sendRequest();
+			this->vizInputActualStates.bRightGreenLED = this->bVizRightGreenLed;
+		}
+
+		else if (this->vizInputActualStates.bRedButton != this->bVizRedButton) {
+			FcasePost data;
 			data.HL4 = this->bVizRedButton;
+
+			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->initRequest("HL4");
+			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
+			this->webHandlerPost->sendRequest();
+			this->vizInputActualStates.bRedButton = this->bVizRedButton;
+		}
+
+		else if (this->vizInputActualStates.bYellowButton != this->bVizYellowButton) {
+			FcasePost data;
 			data.HL5 = this->bVizYellowButton;
+
+			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->initRequest("HL5");
+			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
+			this->webHandlerPost->sendRequest();
+			this->vizInputActualStates.bYellowButton = this->bVizYellowButton;
+		}
+
+		else if (this->vizInputActualStates.bGreenButton != this->bVizGreenButton) {
+			FcasePost data;
 			data.HL6 = this->bVizGreenButton;
+
+			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->initRequest("HL6");
+			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
+			this->webHandlerPost->sendRequest();
+			this->vizInputActualStates.bGreenButton = this->bVizGreenButton;
+		}
+
+		else if (this->vizInputActualStates.bBlueButton != this->bVizBlueButton) {
+			FcasePost data;
 			data.HL7 = this->bVizBlueButton;
+
+			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->initRequest("HL7");
+			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
+			this->webHandlerPost->sendRequest();
+			this->vizInputActualStates.bBlueButton = this->bVizBlueButton;
+		}
+
+		else if (this->vizInputActualStates.sevenSegOneNum != this->vizSevenSegOneNum) {
+			FcasePost data;
 			data.H7seg1 = this->vizSevenSegOneNum;
+
+			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->initRequest("H7seg1");
+			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
+			this->webHandlerPost->sendRequest();
+			this->vizInputActualStates.sevenSegOneNum = this->vizSevenSegOneNum;
+		}
+
+		else if (this->vizInputActualStates.sevenSegTwoNum != this->vizSevenSegTwoNum) {
+			FcasePost data;
 			data.H7seg2 = this->vizSevenSegTwoNum;
+
+			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->initRequest("H7seg2");
+			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
+			this->webHandlerPost->sendRequest();
+			this->vizInputActualStates.sevenSegTwoNum = this->vizSevenSegTwoNum;
+		}
+
+		else if (this->vizInputActualStates.displayUpNum != this->vizSetDisplayUpNum) {
+			FcasePost data;
 			data.A1 = this->vizSetDisplayUpNum;
+
+			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->initRequest("A1");
+			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
+			this->webHandlerPost->sendRequest();
+			this->vizInputActualStates.displayUpNum = this->vizSetDisplayUpNum;
+		}
+
+		else if (this->vizInputActualStates.displayDownNum != this->vizSetDisplayDownNum) {
+			FcasePost data;
 			data.A2 = this->vizSetDisplayDownNum;
 
 			this->webHandlerPost->setPostCaseReqData(data);
-			this->webHandlerPost->initRequest();
-			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, MakeShared<TFunction<void(FHttpRequestPtr, FHttpResponsePtr, bool)>>(MoveTemp(this->onReqCompleteFunctorPost)));
+			this->webHandlerPost->initRequest("A2");
+			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
 			this->webHandlerPost->sendRequest();
-
-			this->vizActualStates.bLeftGreenLED = this->bVizLeftGreenLed;
-			this->vizActualStates.bMiddleGreenLED = this->bVizMiddleGreenLed;
-			this->vizActualStates.bRightGreenLED = this->bVizRightGreenLed;
-			this->vizActualStates.bRedButton = this->bVizRedButton;
-			this->vizActualStates.bYellowButton = this->bVizYellowButton;
-			this->vizActualStates.bGreenButton = this->bVizGreenButton;
-			this->vizActualStates.bBlueButton = this->bVizBlueButton;
-			this->vizActualStates.sevenSegOneNum = this->vizSevenSegOneNum;
-			this->vizActualStates.sevenSegTwoNum = this->vizSevenSegTwoNum;
-			this->vizActualStates.displayUpNum = this->vizSetDisplayUpNum;
-			this->vizActualStates.displayDownNum = this->vizSetDisplayDownNum;
+			this->vizInputActualStates.displayDownNum = this->vizSetDisplayDownNum;
 		}
-//#endif
-#if 0
-		TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
-		Request->SetURL("http://147.232.60.231:5001/kuforSend");
-		Request->SetVerb("POST");
-
-		FString jsonStr = TEXT("{\"HL1\": 1}");
-
-		Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-		Request->SetContentAsString(jsonStr);
-
-		UE_LOG(LogTemp, Warning, TEXT("Header just before send: %s"), *Request->GetHeader(TEXT("Content-Type")));
-
-		Request->OnProcessRequestComplete().BindLambda([](FHttpRequestPtr Req, FHttpResponsePtr Resp, bool bSuccess)
-			{
-				if (Resp.IsValid())
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Response: %s"), *Resp->GetContentAsString());
-				}
-				else
-				{
-					UE_LOG(LogTemp, Error, TEXT("No response received"));
-				}
-			});
-
-		Request->ProcessRequest();
-#endif
 	}else{
 		this->numToSegments(this->sevenSegOneNum, this->sevenSegOne);
 		this->numToSegments(this->sevenSegTwoNum, this->sevenSegTwo);

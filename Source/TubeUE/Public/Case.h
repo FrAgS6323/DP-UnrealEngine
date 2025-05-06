@@ -17,7 +17,22 @@ class TUBEUE_API ACase : public AActor
 {
 	GENERATED_BODY()
 	private:
-		typedef struct vizActualStates{
+		typedef struct vizInputActualStates{
+			bool bBlueButton = false,
+				bRedButton = false,
+				bGreenButton = false,
+				bYellowButton = false,
+				bLeftGreenLED = false,
+				bMiddleGreenLED = false,
+				bRightGreenLED = false;
+			int sevenSegOneNum = 0,
+				sevenSegOneNumGet = 0,	
+				sevenSegTwoNum = 0,
+				sevenSegTwoNumGet = 0,
+				displayUpNum = 0,
+				displayDownNum = 0;
+		}VizInputActualStates;
+		typedef struct vizRestActualStates{
 			bool bBlueButton = false,
 				bRedButton = false,
 				bGreenButton = false,
@@ -29,7 +44,7 @@ class TUBEUE_API ACase : public AActor
 				sevenSegTwoNum = 0,
 				displayUpNum = 0,
 				displayDownNum = 0;
-		}VizActualStates;
+		}VizRestActualStates;
 		bool bIsActive = false;
 		int32 displayUpNum, displayDownNum;
 		static constexpr size_t displaySize = 5;
@@ -40,35 +55,37 @@ class TUBEUE_API ACase : public AActor
 			TObjectPtr<UMaterialInterface> matOn;
 		}MatElementData;
 		TObjectPtr<UStaticMeshComponent> sCaseMesh;
-		MatElementData blueButton,
-						greenButton, 
-						redButton, 
-						yellowButton,
-						leftGreenLed,
-						middleGreenLed,
-						rightGreenLed,
-						leftRedKnob,
-						rightRedKnob;
-		TArray<MatElementData> sevenSegOne, sevenSegTwo;
-		TArray<TArray<MatElementData>> displayUp, displayDown;
+		ACase::MatElementData blueButton,
+						      greenButton, 
+						      redButton, 
+							  yellowButton,
+							  leftGreenLed,
+							  middleGreenLed,
+							  rightGreenLed,
+							  leftRedKnob,
+							  rightRedKnob;
+		TArray<ACase::MatElementData> sevenSegOne, sevenSegTwo;
+		TArray<TArray<ACase::MatElementData>> displayUp, displayDown;
 		TSharedPtr<FJsonObject> responseObj;
 		WebHandler* webHandlerGet, *webHandlerPost;
-		VizActualStates vizActualStates;
-		TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> onReqCompleteFunctorGet, 
-																							onReqCompleteFunctorPost;
-		void initSegArray(TArray<MatElementData>& segArray, 
+		ACase::VizInputActualStates vizInputActualStates;
+		ACase::VizRestActualStates vizRestActualStates;
+		TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> onReqCompleteFunctorGet;
+		TSharedPtr<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>> onReqCompleteFunctorPost;
+		void initSegArray(TArray<ACase::MatElementData>& segArray, 
 						  const TArray<int>& slots, 
 						  const TCHAR* offMatPath,
 						  const TCHAR* onMatPath);
-		void initDisplay(TArray<TArray<MatElementData>> &display, 
+		void initDisplay(TArray<TArray<ACase::MatElementData>> &display, 
 						 const TArray<TArray<int>>& slots, 
 						 const TCHAR* offMatPath,
 						 const TCHAR* onMatPath);
 		auto numToDigits(const int &num) -> TArray<int>;
-		void numToSegments(const int &num, TArray<MatElementData>& segArray);
-		void numToDisplay(const int& num, TArray<TArray<MatElementData>>& display);
-		void renderSegArray(const TArray<MatElementData>& segArray);
-		void renderDisplay(const TArray<TArray<MatElementData>> &display);
+		void numToSegments(const int &num, TArray<ACase::MatElementData>& segArray);
+		void segmentsToNum(const TArray<bool>& segArray, int& num);
+		void numToDisplay(const int& num, TArray<TArray<ACase::MatElementData>>& display);
+		void renderSegArray(const TArray<ACase::MatElementData>& segArray);
+		void renderDisplay(const TArray<TArray<ACase::MatElementData>> &display);
 		void renderMaterials();
 		void funcForWebHandlerGet(FHttpRequestPtr request, FHttpResponsePtr response, bool connected);
 		void funcForWebHandlerPost(FHttpRequestPtr request, FHttpResponsePtr response, bool connected);

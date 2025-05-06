@@ -34,6 +34,7 @@ class TUBEUE_API WebHandler{
 		WebHandler(const TCHAR* url, WebHandler::eRequestType reqType);
 		void setPostCaseReqData(FcasePost &data);
 		void initRequest();
+		void initRequest(const FString &key);
 		void setFunctorOnProcessRequestComplete(AActor *actor, TSharedPtr<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>> functorPtr);
 		void sendRequest();
 		~WebHandler();
@@ -43,5 +44,5 @@ class TUBEUE_API WebHandler{
 		FHttpRequestPtr request;
 		FHttpResponsePtr response;
 		FcasePost data;
-		bool serializeJSON(FcasePost &postData, FString &jsonStr);
+		bool serializeJSON(FcasePost &postData, const FString &key, FString &jsonStr);
 };

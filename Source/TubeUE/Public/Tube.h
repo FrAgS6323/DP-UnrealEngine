@@ -55,7 +55,10 @@ class TUBEUE_API ATube : public AActor{
 			saturationLimitServoMax = 1000.0;
 		bool bHit = true,
 			 bPhysicsIsSet = false;
-		double distance, angle, desiredHeight, vizActualHeight;
+		double distance, 
+			   angle, 
+			   desiredHeight, 
+			   vizActualHeight;
 		TArray<double> regHeights;
 		ERunningModesTube mode = ERunningModesTube::SIMULATION;
 		TObjectPtr<UStaticMeshComponent> sTubeMesh;

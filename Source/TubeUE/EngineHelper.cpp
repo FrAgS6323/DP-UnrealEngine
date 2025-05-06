@@ -156,11 +156,11 @@ void UEngineHelper::setKinematicTarget(UStaticMeshComponent *component, bool bSt
 	if (bState){
 		component->SetSimulatePhysics(false);
 		component->SetMobility(EComponentMobility::Movable);
-		component->SetCollisionEnabled(ECollisionEnabled::NoCollision);  // voliteľné
+		component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}else{
 		component->SetPhysicsLinearVelocity(FVector::ZeroVector);
 		component->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
-		component->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);  // ak si ho predtým vypol
+		component->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		component->SetSimulatePhysics(true);
 	}
 }

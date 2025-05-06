@@ -149,6 +149,9 @@ void ATube::initialize(){
         this->sTubeMesh->SetMobility(EComponentMobility::Movable);
 
 //#if 0
+        //this->tubeJoint->SetWorldLocation(this->GetActorLocation());
+        //this->tubeJoint->SetRelativeRotation(FRotator(0,180,0));
+
         UEngineHelper::setupConstraint(this->tubeJoint,
             this->sHolderMesh,
             this->sHolderMesh,
@@ -160,12 +163,6 @@ void ATube::initialize(){
             EAngularConstraintMotion::ACM_Locked, 0.0f,
             EAngularConstraintMotion::ACM_Free, 0.0f);
 //#endif
-        //this->tubeJoint->SetAngularDriveMode(EAngularDriveMode::TwistAndSwing);
-        //this->tubeJoint->SetAngularOrientationDrive(false , true);
-        //this->tubeJoint->SetAngularDriveParams(1000000.0f, 5000.0f, 1000000.0f); // Sila a tlmenie
-
-        //this->sTubeMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
         this->sTubeMesh->SetMobility(EComponentMobility::Movable);
         this->sTubeMesh->SetMassOverrideInKg(NAME_None, 0.15f, true);
         this->sTubeMesh->BodyInstance.bAutoWeld = false;
@@ -275,7 +272,6 @@ auto ATube::splitBallForce(const double & PIDoutput, const double &inAngle) -> F
         xForce = 0,
         yForce = 0;
     FVector splitForce;
-    //std::cout << "beta: " << beta << std::endl;
 
     if (0 == inAngle) {
         return FVector(0, 0, PIDoutput);
@@ -302,11 +298,10 @@ auto ATube::splitBallForce(const double & PIDoutput, const double &inAngle) -> F
 }
 
 void ATube::PIDBall(float deltaTime) {
-//#if 0
     if ((this->desiredHeight > this->getRegulationHeight()) ||
         (this->desiredHeight < 0))
         UE_LOG(LogTemp, Warning, TEXT("Wrong input! (Expected between 0 and %f)"), this->getRegulationHeight());
-//#endif
+
     if (!this->pidControllerBall) {
         UE_LOG(LogTemp, Warning, TEXT("UPID for ball not initialized!"));
         return;
@@ -333,10 +328,10 @@ void ATube::PIDServo(float deltaTime) {
     double error = UPID::estimateError(this->angle, currentRotation.Roll),
         output = this->pidControllerServo ? this->pidControllerServo->getPIDOutput(error, (double)deltaTime) : 0;
     
-    UE_LOG(LogTemp, Warning, TEXT("PID desiredAngle: = %f"), this->angle);
-    UE_LOG(LogTemp, Warning, TEXT("PID currentAngle: = %f"), currentRotation.Roll);
-    UE_LOG(LogTemp, Warning, TEXT("PID Servo error: = %f"), error);
-    UE_LOG(LogTemp, Warning, TEXT("PID Servo output: = %f\n"), output);
+    //UE_LOG(LogTemp, Warning, TEXT("PID desiredAngle: = %f"), this->angle);
+    //UE_LOG(LogTemp, Warning, TEXT("PID currentAngle: = %f"), currentRotation.Roll);
+    //UE_LOG(LogTemp, Warning, TEXT("PID Servo error: = %f"), error);
+    //UE_LOG(LogTemp, Warning, TEXT("PID Servo output: = %f\n"), output);
     if (this->sTubeMesh) this->sTubeMesh->AddTorqueInRadians(FVector(output, 0.0, 0.0), NAME_None, false);
 }
 
@@ -514,17 +509,20 @@ void ATube::Tick(float DeltaTime){
                                               this->ballI,
                                               this->ballD);
 
+    //UE_LOG(LogTemp, Error, TEXT("Outer kD: %f"), this->servoD);
         this->pidControllerServo->setPIDvalues(this->servoP,
                                                this->servoI,
                                                this->servoD);
+       
     this->pidControllerBall->setSaturationLimits(this->saturationLimitBallMin, this->saturationLimitBallMax);
     this->pidControllerServo->setSaturationLimits(this->saturationLimitServoMin, this->saturationLimitServoMax);
 
     if (ERunningModesTube::SIMULATION == this->mode) {
         if (this->bChangeMode) {
-            UEngineHelper::setKinematicTarget(this->sHolderMesh, false);
+            //UEngineHelper::setKinematicTarget(this->sHolderMesh, false);
             UEngineHelper::setKinematicTarget(this->sTubeMesh, false);
             UEngineHelper::setKinematicTarget(this->sBallMesh, false);
+//#if 0
             UEngineHelper::setupConstraint(this->tubeJoint,
                 this->sHolderMesh,
                 this->sHolderMesh,
@@ -535,6 +533,8 @@ void ATube::Tick(float DeltaTime){
                 EAngularConstraintMotion::ACM_Locked, 0.0f,
                 EAngularConstraintMotion::ACM_Locked, 0.0f,
                 EAngularConstraintMotion::ACM_Free, 0.0f);
+//#endif
+            //this->tubeJoint->SetRelativeRotation(FRotator(0, 180, 0));
             this->pidControllerBall->reset();
             this->pidControllerServo->reset();
             this->bChangeMode = false;
@@ -558,13 +558,20 @@ void ATube::Tick(float DeltaTime){
 
         this->PIDBall(DeltaTime);
         this->PIDServo(DeltaTime);
+        UE_LOG(LogTemp, Display, TEXT("Rotator Tube (Pitch, Yaw, Roll): = (%f, %f, %f)"), this->sTubeMesh->GetRelativeRotation().Pitch, 
+                                                                                          this->sTubeMesh->GetRelativeRotation().Yaw, 
+                                                                                          this->sTubeMesh->GetRelativeRotation().Roll);
+
+        UE_LOG(LogTemp, Display, TEXT("Rotator Joint (Pitch, Yaw, Roll): = (%f, %f, %f)"), this->tubeJoint->GetRelativeRotation().Pitch,
+            this->tubeJoint->GetRelativeRotation().Yaw,
+            this->tubeJoint->GetRelativeRotation().Roll);
     }
     else if (ERunningModesTube::VISUALIZATION == this->mode){
         double ballX, 
                ballY;
         
         if (this->bChangeMode){
-            UEngineHelper::setKinematicTarget(this->sHolderMesh, true);
+            //UEngineHelper::setKinematicTarget(this->sHolderMesh, true);
             UEngineHelper::setKinematicTarget(this->sTubeMesh, true);
             UEngineHelper::setKinematicTarget(this->sBallMesh, true);
             this->bChangeMode = false;
@@ -577,15 +584,17 @@ void ATube::Tick(float DeltaTime){
         this->webHandler->initRequest();
         this->webHandler->setFunctorOnProcessRequestComplete(this, MakeShared<TFunction<void(FHttpRequestPtr, FHttpResponsePtr, bool)>>(MoveTemp(this->onReqCompleteFunctor)));
         this->webHandler->sendRequest();
+        
+        double testHeight = 20.0,
+               testAngle = 45.0;
 
-        this->convertHeightAngleToXY(this->vizActualHeight, this->angle, ballX, ballY);
-        UE_LOG(LogTemp, Warning, TEXT("height: %f, angle: %f, conX: %f conY: %f"), this->vizActualHeight, this->angle, ballX, ballY);
+        this->convertHeightAngleToXY(testHeight, testAngle, ballX, ballY); //this->vizActualHeight, this->angle
+        //UE_LOG(LogTemp, Warning, TEXT("height: %f, angle: %f, conX: %f conY: %f"), this->vizActualHeight, this->angle, ballX, ballY);
 
-        this->sHolderMesh->SetWorldLocation(this->GetActorLocation());
-        this->sHolderMesh->SetRelativeRotation(FRotator(0, 180, 0));
         this->sBallMesh->SetWorldLocation(FVector(this->GetActorLocation().X - 6.0, this->GetActorLocation().Y + ballX, this->GetActorLocation().Z + ballY));
         this->sTubeMesh->SetWorldLocation(FVector(this->GetActorLocation().X - 6.0, this->GetActorLocation().Y, this->GetActorLocation().Z));
-        this->sTubeMesh->SetWorldRotation(this->GetActorRotation().Add(0.0, 0.0, this->angle));
+        this->sTubeMesh->SetWorldRotation(FRotator(this->GetActorRotation().Pitch, this->GetActorRotation().Yaw + 180, this->GetActorRotation().Roll + testAngle)); //this->GetActorRotation().Roll + this->angle)
+        //this->sTubeMesh->SetWorldRotation(this->GetActorRotation().Add(0.0, 0.0, this->angle));
 
 #if 0
         if (this->reqData.response.IsValid()){
@@ -597,7 +606,6 @@ void ATube::Tick(float DeltaTime){
 #endif
     }else{
         if (this->bChangeMode) {
-            UEngineHelper::setKinematicTarget(this->sHolderMesh, false);
             UEngineHelper::setKinematicTarget(this->sTubeMesh, false);
             UEngineHelper::setKinematicTarget(this->sBallMesh, false);
             UEngineHelper::setupConstraint(this->tubeJoint,
@@ -614,7 +622,6 @@ void ATube::Tick(float DeltaTime){
             this->pidControllerServo->reset();
             this->bChangeMode = false;
         }
-        //this->setMeshesPhysicsAndGravity(true);
         this->onReqCompleteFunctor = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
             this->funcForWebHandler(request, response, connected);
         };

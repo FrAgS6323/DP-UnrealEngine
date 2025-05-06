@@ -2,7 +2,6 @@
 
 UPID::UPID(ePIDusage usage):
 	clamp(false),
-	bFirstRun(true),
 	usage(usage),
 	p(0.0),
 	i(0.0),
@@ -61,11 +60,13 @@ bool UPID::setIdealPIDvalues() {
 	bool change = this->detectChange(idealP,
 									 idealI,
 									 idealD);
+//#if 0
 	if (change) {
 		this->kP = idealP;
 		this->kI = idealI;
 		this->kD = idealD;
 	}
+//#endif
 	return change;
 }
 
@@ -73,22 +74,20 @@ double UPID::getPIDOutput(double currentError, double deltaTime) {
 	this->p = currentError;
 
 	if (!this->clamp) this->i += currentError * deltaTime;
-	
-	if (this->bFirstRun) {
-		this->error = currentError;
-		this->d = 0.0;
-		this->bFirstRun = false;
-	}else{
-		this->d = (currentError - this->error) / deltaTime;
-		this->error = currentError;
-	}
+
+	this->d = (currentError - this->error) / deltaTime;
+	this->error = currentError;
 
 	double preSaturationFilterValue = this->p * this->kP +
-		this->i * this->kI +
-		this->d * this->kD,
+									  this->i * this->kI +
+									  this->d * this->kD,
 		output = std::clamp(preSaturationFilterValue,
-			this->saturationLimitMin,
-			this->saturationLimitMax);
+							this->saturationLimitMin,
+							this->saturationLimitMax);
+
+	//UE_LOG(LogTemp, Warning, TEXT("kP: %f, kI: %f, kD: %f"), this->kP, this->kI, this->kD);
+	//UE_LOG(LogTemp, Warning, TEXT("P: %f, I: %f, D: %f"), this->p, this->i, this->d);
+	//UE_LOG(LogTemp, Error, TEXT("PID error: %f"), this->error);
 
 	if (preSaturationFilterValue != output) {
 		if (UPID::sgn(currentError) == UPID::sgn(preSaturationFilterValue)) this->clamp = true;

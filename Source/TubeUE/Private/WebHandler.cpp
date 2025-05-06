@@ -12,19 +12,19 @@ void WebHandler::setPostCaseReqData(FcasePost &postData){
 	this->data = postData;
 }
 
-bool WebHandler::serializeJSON(FcasePost &postData, FString &jsonStr){
+bool WebHandler::serializeJSON(FcasePost &postData, const FString& key, FString &jsonStr) {
 	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject);
-	jsonObject->SetNumberField("HL1", postData.HL1);
-	jsonObject->SetNumberField("HL2", postData.HL2);
-	jsonObject->SetNumberField("HL3", postData.HL3);
-	jsonObject->SetNumberField("HL4", postData.HL4);
-	jsonObject->SetNumberField("HL5", postData.HL5);
-	jsonObject->SetNumberField("HL6", postData.HL6);
-	jsonObject->SetNumberField("HL7", postData.HL7);
-	jsonObject->SetNumberField("H7seg1", postData.H7seg1);
-	jsonObject->SetNumberField("H7seg2", postData.H7seg2);
-	jsonObject->SetNumberField("A1", postData.A1);
-	jsonObject->SetNumberField("A2", postData.A2);
+	if("HL1" == key) jsonObject->SetNumberField("HL1", postData.HL1);
+	else if("HL2" == key) jsonObject->SetNumberField("HL2", postData.HL2);
+	else if("HL3" == key) jsonObject->SetNumberField("HL3", postData.HL3);
+	else if("HL4" == key) jsonObject->SetNumberField("HL4", postData.HL4);
+	else if("HL5" == key) jsonObject->SetNumberField("HL5", postData.HL5);
+	else if("HL6" == key) jsonObject->SetNumberField("HL6", postData.HL6);
+	else if("HL7" == key) jsonObject->SetNumberField("HL7", postData.HL7);
+	else if("H7seg1" == key) jsonObject->SetNumberField("H7seg1", postData.H7seg1);
+	else if("H7seg2" == key) jsonObject->SetNumberField("H7seg2", postData.H7seg2);
+	else if("A1" == key) jsonObject->SetNumberField("A1", postData.A1);
+	else if("A2" == key) jsonObject->SetNumberField("A2", postData.A2);
 
 	TSharedRef<TJsonWriter<>> writer = TJsonWriterFactory<>::Create(&jsonStr);
 	bool bSerialized = FJsonSerializer::Serialize(jsonObject.ToSharedRef(), writer);
@@ -37,22 +37,30 @@ void WebHandler::initRequest(){
 	this->request = FHttpModule::Get().CreateRequest();
 	this->request->SetURL(url);
 	this->request->SetVerb(WebHandler::eRequestType::GET == this->requestType ? "GET" : "POST");
-	
+}
 
-	if (WebHandler::eRequestType::POST == this->requestType){
+void WebHandler::initRequest(const FString& key){
+	this->request = FHttpModule::Get().CreateRequest();
+	this->request->SetURL(url);
+	this->request->SetVerb(WebHandler::eRequestType::GET == this->requestType ? "GET" : "POST");
+
+
+	if (WebHandler::eRequestType::POST == this->requestType) {
 		//UE_LOG(LogTemp, Warning, TEXT("Created POST request: %p"), this->request.Get());
 		FString jsonStr;
-		
-		if(this->serializeJSON(this->data, jsonStr)){
-			if (!jsonStr.IsEmpty()){
+
+		if (this->serializeJSON(this->data, key, jsonStr)) {
+			if (!jsonStr.IsEmpty()) {
 				this->request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 				this->request->SetContentAsString(jsonStr);
 				UE_LOG(LogTemp, Warning, TEXT("Serialized JSON POST: %s"), *jsonStr);
 				//UE_LOG(LogTemp, Warning, TEXT("Header now: %s"), *this->request->GetHeader(TEXT("Content-Type")));
-			}else{
+			}
+			else {
 				UE_LOG(LogTemp, Error, TEXT("jsonStr is EMPTY — Content will NOT be set!"));
 			}
-		}else{
+		}
+		else {
 			UE_LOG(LogTemp, Warning, TEXT("Json POST Serialization failed!"));
 		}
 	}

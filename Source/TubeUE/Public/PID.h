@@ -6,8 +6,7 @@ enum class ePIDusage { HEIGHT, ANGLE };
 
 class TUBEUE_API UPID{
 	private:
-		bool clamp,
-			 bFirstRun;
+		bool clamp;
 		double kP,
 			   kI,
 			   kD,
