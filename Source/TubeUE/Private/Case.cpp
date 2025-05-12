@@ -48,8 +48,8 @@ ACase::ACase() {
 	this->sCaseMesh->SetMobility(EComponentMobility::Movable);
 	this->sCaseMesh->SetMassOverrideInKg(NAME_None, 10.0f, true);
 
-	this->webHandlerGet = new WebHandler(TEXT("http://147.232.60.231:5001/kuforDataAPI"), WebHandler::eRequestType::GET);
-	this->webHandlerPost = new WebHandler(TEXT("http://147.232.60.231:5001/kuforSend"), WebHandler::eRequestType::POST);
+	this->webHandlerGet = MakeUnique<WebHandler>(TEXT("http://147.232.60.231:5001/kuforDataAPI"), WebHandler::eRequestType::GET);
+	this->webHandlerPost = MakeUnique<WebHandler>(TEXT("http://147.232.60.231:5001/kuforSend"), WebHandler::eRequestType::POST);
 }
 
 void ACase::funcForWebHandlerGet(FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
@@ -398,8 +398,9 @@ void ACase::BeginPlay(){
 	Super::BeginPlay();
 }
 
-void ACase::setActive(bool bActive){
+void ACase::setActive(APlayerController* inPlayerController, bool bActive){
 	this->bIsActive = bActive;
+	this->playerController = this->bIsActive ? inPlayerController : nullptr;
 	UE_LOG(LogTemp, Warning, TEXT("Case now active!"));
 }
 
@@ -423,7 +424,7 @@ void ACase::Tick(float DeltaTime){
 			FcasePost data;
 			data.HL1 = this->bVizLeftGreenLed;
 
-			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->setPostReqData(data);
 			this->webHandlerPost->initRequest("HL1");
 			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
 			this->webHandlerPost->sendRequest();
@@ -434,7 +435,7 @@ void ACase::Tick(float DeltaTime){
 			FcasePost data;
 			data.HL2 = this->bVizMiddleGreenLed;
 
-			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->setPostReqData(data);
 			this->webHandlerPost->initRequest("HL2");
 			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
 			this->webHandlerPost->sendRequest();
@@ -445,7 +446,7 @@ void ACase::Tick(float DeltaTime){
 			FcasePost data;
 			data.HL3 = this->bVizRightGreenLed;
 
-			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->setPostReqData(data);
 			this->webHandlerPost->initRequest("HL3");
 			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
 			this->webHandlerPost->sendRequest();
@@ -456,7 +457,7 @@ void ACase::Tick(float DeltaTime){
 			FcasePost data;
 			data.HL4 = this->bVizRedButton;
 
-			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->setPostReqData(data);
 			this->webHandlerPost->initRequest("HL4");
 			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
 			this->webHandlerPost->sendRequest();
@@ -467,7 +468,7 @@ void ACase::Tick(float DeltaTime){
 			FcasePost data;
 			data.HL5 = this->bVizYellowButton;
 
-			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->setPostReqData(data);
 			this->webHandlerPost->initRequest("HL5");
 			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
 			this->webHandlerPost->sendRequest();
@@ -478,7 +479,7 @@ void ACase::Tick(float DeltaTime){
 			FcasePost data;
 			data.HL6 = this->bVizGreenButton;
 
-			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->setPostReqData(data);
 			this->webHandlerPost->initRequest("HL6");
 			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
 			this->webHandlerPost->sendRequest();
@@ -489,7 +490,7 @@ void ACase::Tick(float DeltaTime){
 			FcasePost data;
 			data.HL7 = this->bVizBlueButton;
 
-			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->setPostReqData(data);
 			this->webHandlerPost->initRequest("HL7");
 			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
 			this->webHandlerPost->sendRequest();
@@ -500,7 +501,7 @@ void ACase::Tick(float DeltaTime){
 			FcasePost data;
 			data.H7seg1 = this->vizSevenSegOneNum;
 
-			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->setPostReqData(data);
 			this->webHandlerPost->initRequest("H7seg1");
 			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
 			this->webHandlerPost->sendRequest();
@@ -511,7 +512,7 @@ void ACase::Tick(float DeltaTime){
 			FcasePost data;
 			data.H7seg2 = this->vizSevenSegTwoNum;
 
-			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->setPostReqData(data);
 			this->webHandlerPost->initRequest("H7seg2");
 			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
 			this->webHandlerPost->sendRequest();
@@ -522,7 +523,7 @@ void ACase::Tick(float DeltaTime){
 			FcasePost data;
 			data.A1 = this->vizSetDisplayUpNum;
 
-			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->setPostReqData(data);
 			this->webHandlerPost->initRequest("A1");
 			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
 			this->webHandlerPost->sendRequest();
@@ -533,7 +534,7 @@ void ACase::Tick(float DeltaTime){
 			FcasePost data;
 			data.A2 = this->vizSetDisplayDownNum;
 
-			this->webHandlerPost->setPostCaseReqData(data);
+			this->webHandlerPost->setPostReqData(data);
 			this->webHandlerPost->initRequest("A2");
 			this->webHandlerPost->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorPost);
 			this->webHandlerPost->sendRequest();
@@ -550,4 +551,6 @@ void ACase::Tick(float DeltaTime){
 	this->numToDisplay(this->displayDownNum, this->displayDown);
 
 	this->renderMaterials();
+	if (this->playerController && this->playerController->WasInputKeyJustReleased(EKeys::U)) this->bShowColliders = !this->bShowColliders;
+	if (this->bShowColliders) UEngineHelper::drawAllSimpleCollidersForActor(this);
 }

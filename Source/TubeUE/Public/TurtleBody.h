@@ -13,10 +13,12 @@ UCLASS(Blueprintable)
 class TUBEUE_API ATurtleBody : public APawn{
 	GENERATED_BODY()
 	private:
-		bool bIsActive = false, bLidar;
+		bool bIsActive = false, 
+			 bLidar = false,
+			 bShowColliders = false;
 		inline static double wheelRotationVel = 1000.0f;
 		inline static double lidarRotationVel = 1500.0f;
-		APlayerController* playerController;
+		APlayerController *playerController;
 		TObjectPtr<UStaticMeshComponent> sBodyMesh;
 		TObjectPtr<UStaticMeshComponent> sLeftWheelMesh;
 		TObjectPtr<UStaticMeshComponent> sRightWheelMesh;

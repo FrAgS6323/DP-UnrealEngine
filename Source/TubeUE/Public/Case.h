@@ -45,14 +45,15 @@ class TUBEUE_API ACase : public AActor
 				displayUpNum = 0,
 				displayDownNum = 0;
 		}VizRestActualStates;
-		bool bIsActive = false;
+		bool bIsActive = false,
+			 bShowColliders = false;
 		int32 displayUpNum, displayDownNum;
 		static constexpr size_t displaySize = 5;
 		typedef struct matElementData {
 			bool bSwitch;
 			int slot;
-			TObjectPtr<UMaterialInterface> matOff;
-			TObjectPtr<UMaterialInterface> matOn;
+			TObjectPtr<UMaterialInterface> matOff, 
+										   matOn;
 		}MatElementData;
 		TObjectPtr<UStaticMeshComponent> sCaseMesh;
 		ACase::MatElementData blueButton,
@@ -66,8 +67,10 @@ class TUBEUE_API ACase : public AActor
 							  rightRedKnob;
 		TArray<ACase::MatElementData> sevenSegOne, sevenSegTwo;
 		TArray<TArray<ACase::MatElementData>> displayUp, displayDown;
+		APlayerController *playerController;
 		TSharedPtr<FJsonObject> responseObj;
-		WebHandler* webHandlerGet, *webHandlerPost;
+		TUniquePtr<WebHandler> webHandlerGet, 
+							   webHandlerPost;
 		ACase::VizInputActualStates vizInputActualStates;
 		ACase::VizRestActualStates vizRestActualStates;
 		TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> onReqCompleteFunctorGet;
@@ -91,10 +94,8 @@ class TUBEUE_API ACase : public AActor
 		void funcForWebHandlerPost(FHttpRequestPtr request, FHttpResponsePtr response, bool connected);
 		//TObjectPtr<UPointLightComponent> pointLight;
 	protected:
-		// Called when the game starts or when spawned
 		virtual void BeginPlay() override;
 	public:	
-		// Sets default values for this actor's properties
 		ACase();
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Buttons") bool bBlueButton;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Buttons") bool bRedButton;
@@ -121,6 +122,6 @@ class TUBEUE_API ACase : public AActor
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Displays") int vizSetDisplayUpNum = 0;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Displays") int vizSetDisplayDownNum = 0;
 		UPROPERTY(EditAnywhere, Category = "Runnning Mode") ERunningModesCase mode = ERunningModesCase::SIMULATION;
-		void setActive(bool bActive);
+		void setActive(APlayerController* inPlayerController, bool bActive);
 		virtual void Tick(float DeltaTime) override;
 };

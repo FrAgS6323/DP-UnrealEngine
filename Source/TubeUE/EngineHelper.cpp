@@ -106,13 +106,9 @@ auto UEngineHelper::performRaycast(UWorld *world,
 												  endVec,
 												  ECC_Visibility,
 												  collisionParams);
-	if (bIsHit) {
-		//UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *hitResult.GetActor()->GetName());
-
+	if (bIsHit){
 		hitDistance = hitResult.Distance;
-		//UE_LOG(LogTemp, Warning, TEXT("Hit Distance: %f"), this->distance);
 		//DrawDebugLine(GetWorld(), startVec, endVec, FColor::Red, false, 1, 0, 1);
-		// 
 		if(enableDebugRay) DrawDebugPoint(world, hitResult.Location, 10, FColor::Green, false, 1);
 	}else{
 		if(enableDebugRay) DrawDebugLine(world, startVec, endVec, FColor::Red, false, 1, 0, 1);
@@ -121,7 +117,7 @@ auto UEngineHelper::performRaycast(UWorld *world,
 }
 
 auto UEngineHelper::degToRad(double deg) -> double {
-		return (deg * PI) / 180;
+	return (deg * PI) / 180;
 }
 
 auto UEngineHelper::radToDeg(double rad) -> double {
@@ -136,9 +132,8 @@ auto UEngineHelper::findActorsOfClass(const UObject* worldContextObject, TSubcla
 	if (foundActors.Num() > 0) {
 		outActor = foundActors[index];
 		//UE_LOG(LogTemp, Warning, TEXT("tube initialized in level!"));
-	}
-	else {
-		//UE_LOG(LogTemp, Warning, TEXT("tube NOT initialized in level!"));
+	}else{
+		outActor = nullptr;
 	}
 	return outActor;
 }
@@ -355,4 +350,99 @@ void UEngineHelper::Profiler::writeAvgsToLOG(){
 
 	UE_LOG(LogTemp, Warning, TEXT("Avg FPS: %.2f, Avg CPU: %.2f%%, Avg RAM: %.2f MB"), avgFPS, avgCPU, avgRAM);
 	UE_LOG(LogTemp, Warning, TEXT("Avg used VRAM: %.2f MB, Avg budget VRAM: %.2f MB, Avg % VRAM: %.2f%%"), avgUsedVRAM, avgBudgetVRAM, avgPercentVRAM);
+}
+
+void UEngineHelper::drawAllSimpleCollidersForActor(AActor* actor)
+{
+	if (!actor) return;
+
+	UWorld* world = actor->GetWorld();
+	if (!world) return;
+
+	TArray<UPrimitiveComponent*> Components;
+	actor->GetComponents<UPrimitiveComponent>(Components);
+
+	const float lifetime = 0.15f;
+	const float thickness = 0.15f;
+
+	for (UPrimitiveComponent* Comp : Components){
+		if (!Comp->IsRegistered()) continue;
+
+		const FTransform& Transform = Comp->GetComponentTransform();
+
+		if (auto* Sphere = Cast<USphereComponent>(Comp)){
+			DrawDebugSphere(world, Transform.GetLocation(), Sphere->GetScaledSphereRadius(), 16, FColor::Green, false, lifetime, 0, thickness);
+		}
+		else if (auto* Box = Cast<UBoxComponent>(Comp)){
+			DrawDebugBox(world, Transform.GetLocation(), Box->GetScaledBoxExtent(), Transform.GetRotation(), FColor::Orange, false, lifetime, 0, thickness);
+		}
+		else if (auto* Capsule = Cast<UCapsuleComponent>(Comp)){
+			DrawDebugCapsule(world, Transform.GetLocation(), Capsule->GetScaledCapsuleHalfHeight(), Capsule->GetScaledCapsuleRadius(), Transform.GetRotation(), FColor::Blue, false, lifetime, 0, thickness);
+		}
+		else if (auto* Mesh = Cast<UStaticMeshComponent>(Comp)){
+			const UStaticMesh* StaticMesh = Mesh->GetStaticMesh();
+
+			if (StaticMesh && StaticMesh->GetBodySetup()){
+				const FTransform& CompTM = Mesh->GetComponentTransform();
+				const UBodySetup* BodySetup = StaticMesh->GetBodySetup();
+
+				for (const FKBoxElem& BoxElem : BodySetup->AggGeom.BoxElems){
+					DrawDebugBox(
+						world,
+						CompTM.TransformPosition(BoxElem.Center),
+						FVector(BoxElem.X, BoxElem.Y, BoxElem.Z) * 0.5f,
+						CompTM.GetRotation() * BoxElem.Rotation.Quaternion(),
+						FColor::Red,
+						false,
+						lifetime,
+						0,
+						thickness
+					);
+				}
+
+				for (const FKSphereElem& SphereElem : BodySetup->AggGeom.SphereElems){
+					DrawDebugSphere(
+						world,
+						CompTM.TransformPosition(SphereElem.Center),
+						SphereElem.Radius,
+						16,
+						FColor::Green,
+						false,
+						lifetime,
+						0,
+						thickness
+					);
+				}
+
+				for (const FKSphylElem& CapsuleElem : BodySetup->AggGeom.SphylElems){
+					DrawDebugCapsule(
+						world,
+						CompTM.TransformPosition(CapsuleElem.Center),
+						CapsuleElem.Length * 0.5f,
+						CapsuleElem.Radius,
+						CompTM.GetRotation() * CapsuleElem.Rotation.Quaternion(),
+						FColor::Blue,
+						false,
+						lifetime,
+						0,
+						thickness
+					);
+				}
+			}
+		}else{
+			// fallback pre iné komponenty
+			const FBoxSphereBounds Bounds = Comp->Bounds;
+			DrawDebugBox(
+				world,
+				Bounds.Origin,
+				Bounds.BoxExtent,
+				Transform.GetRotation(),
+				FColor::Magenta,
+				false,
+				lifetime,
+				0,
+				thickness
+			);
+		}
+	}
 }

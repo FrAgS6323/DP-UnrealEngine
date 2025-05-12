@@ -231,7 +231,10 @@ void ATurtleBody::setActive(APlayerController* inPlayerController, bool bActive)
 void ATurtleBody::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
     this->moveRobot(2.5);
-    if(this->playerController && this->playerController->WasInputKeyJustReleased(EKeys::E)) this->bLidar = !this->bLidar;
 
+    if(this->playerController && this->playerController->WasInputKeyJustReleased(EKeys::E)) this->bLidar = !this->bLidar;
     this->bLidar ? this->turnLidar(0.5f, true) : this->turnLidar(0.0f, false);
+
+    if (this->playerController && this->playerController->WasInputKeyJustReleased(EKeys::U)) this->bShowColliders = !this->bShowColliders;
+    if (this->bShowColliders) UEngineHelper::drawAllSimpleCollidersForActor(this);
 }

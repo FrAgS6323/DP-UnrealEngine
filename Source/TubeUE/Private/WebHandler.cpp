@@ -8,12 +8,35 @@ WebHandler::WebHandler(const TCHAR* url, WebHandler::eRequestType reqType):
 	//this->request->OnProcessRequestComplete().BindUObject(this, WebHandler::onResponseReceived);
 }
 
-void WebHandler::setPostCaseReqData(FcasePost &postData){
-	this->data = postData;
+void WebHandler::setPostReqData(FtubePost &postData){
+	this->dataTube = postData;
+}
+
+void WebHandler::setPostReqData(FcasePost &postData){
+	this->dataCase = postData;
+}
+
+bool WebHandler::serializeJSON(FtubePost& postData, const TArray<FString> &keys, FString& jsonStr) {
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject);
+	
+	for (const FString& key : keys){
+		if ("power" == key) jsonObject->SetNumberField("power", postData.power);
+		if ("height" == key) jsonObject->SetNumberField("height", postData.height);
+		if ("angle" == key) jsonObject->SetNumberField("angle", postData.angle);
+		if ("X" == key) jsonObject->SetNumberField("X", postData.X);
+		if ("Y" == key) jsonObject->SetNumberField("Y", postData.Y);
+	}
+
+	TSharedRef<TJsonWriter<>> writer = TJsonWriterFactory<>::Create(&jsonStr);
+	bool bSerialized = FJsonSerializer::Serialize(jsonObject.ToSharedRef(), writer);
+	//UE_LOG(LogTemp, Warning, TEXT("Serialized JSON: '%s' (Len: %d)"), *jsonStr, jsonStr.Len());
+	writer->Close();
+	return bSerialized;
 }
 
 bool WebHandler::serializeJSON(FcasePost &postData, const FString& key, FString &jsonStr) {
 	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject);
+
 	if("HL1" == key) jsonObject->SetNumberField("HL1", postData.HL1);
 	else if("HL2" == key) jsonObject->SetNumberField("HL2", postData.HL2);
 	else if("HL3" == key) jsonObject->SetNumberField("HL3", postData.HL3);
@@ -49,12 +72,37 @@ void WebHandler::initRequest(const FString& key){
 		//UE_LOG(LogTemp, Warning, TEXT("Created POST request: %p"), this->request.Get());
 		FString jsonStr;
 
-		if (this->serializeJSON(this->data, key, jsonStr)) {
+		if (this->serializeJSON(this->dataCase, key, jsonStr)) {
 			if (!jsonStr.IsEmpty()) {
 				this->request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 				this->request->SetContentAsString(jsonStr);
 				UE_LOG(LogTemp, Warning, TEXT("Serialized JSON POST: %s"), *jsonStr);
-				//UE_LOG(LogTemp, Warning, TEXT("Header now: %s"), *this->request->GetHeader(TEXT("Content-Type")));
+			}
+			else {
+				UE_LOG(LogTemp, Error, TEXT("jsonStr is EMPTY — Content will NOT be set!"));
+			}
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("Json POST Serialization failed!"));
+		}
+	}
+}
+
+void WebHandler::initRequest(const TArray<FString> &keys) {
+	this->request = FHttpModule::Get().CreateRequest();
+	this->request->SetURL(url);
+	this->request->SetVerb(WebHandler::eRequestType::GET == this->requestType ? "GET" : "POST");
+	this->requestQueue.Enqueue(this->request);
+
+	if (WebHandler::eRequestType::POST == this->requestType) {
+		//UE_LOG(LogTemp, Warning, TEXT("Created POST request: %p"), this->request.Get());
+		FString jsonStr;
+
+		if (this->serializeJSON(this->dataTube, keys, jsonStr)) {
+			if (!jsonStr.IsEmpty()) {
+				this->request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+				this->request->SetContentAsString(jsonStr);
+				UE_LOG(LogTemp, Warning, TEXT("Serialized JSON POST: %s"), *jsonStr);
 			}
 			else {
 				UE_LOG(LogTemp, Error, TEXT("jsonStr is EMPTY — Content will NOT be set!"));
@@ -74,7 +122,6 @@ void WebHandler::setFunctorOnProcessRequestComplete(AActor *actor, TSharedPtr<TF
 }
 
 void WebHandler::sendRequest(){
-	//if (WebHandler::eRequestType::POST == this->requestType) UE_LOG(LogTemp, Warning, TEXT("Sending POST request: %p"), this->request.Get());
 	this->request->ProcessRequest();
 }
 

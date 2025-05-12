@@ -6,6 +6,16 @@
 #include "WebHandler.generated.h"
 
 USTRUCT()
+struct FtubePost {
+	GENERATED_BODY()
+	UPROPERTY() bool power;
+	UPROPERTY() int height;
+	UPROPERTY() int angle;
+	UPROPERTY() int X;
+	UPROPERTY() int Y;
+};
+
+USTRUCT()
 struct FcasePost {
 	GENERATED_BODY()
 	UPROPERTY() bool HL1;
@@ -24,6 +34,7 @@ struct FcasePost {
 class TUBEUE_API WebHandler{
 	public:
 		enum class eRequestType { GET, POST };
+		//enum class eModelType { TUBE, CASE };
 		class ReqData {
 			public:
 				bool connected;
@@ -32,9 +43,11 @@ class TUBEUE_API WebHandler{
 		};
 		WebHandler() = delete;
 		WebHandler(const TCHAR* url, WebHandler::eRequestType reqType);
-		void setPostCaseReqData(FcasePost &data);
+		void setPostReqData(FtubePost &postData);
+		void setPostReqData(FcasePost &postData);
 		void initRequest();
 		void initRequest(const FString &key);
+		void initRequest(const TArray<FString> &keys);
 		void setFunctorOnProcessRequestComplete(AActor *actor, TSharedPtr<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>> functorPtr);
 		void sendRequest();
 		~WebHandler();
@@ -42,7 +55,10 @@ class TUBEUE_API WebHandler{
 		const FString url;
 		WebHandler::eRequestType requestType;
 		FHttpRequestPtr request;
+		TQueue<FHttpRequestPtr> requestQueue;
 		FHttpResponsePtr response;
-		FcasePost data;
-		bool serializeJSON(FcasePost &postData, const FString &key, FString &jsonStr);
+		FtubePost dataTube;
+		FcasePost dataCase;	
+		bool serializeJSON(FtubePost &postData, const TArray<FString> &keys, FString &jsonStr);
+		bool serializeJSON(FcasePost& postData, const FString& key, FString& jsonStr);
 };

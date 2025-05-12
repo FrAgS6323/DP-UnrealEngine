@@ -10,6 +10,14 @@
 #include "Windows/HideWindowsPlatformTypes.h"
 #include "CoreMinimal.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
+#include "EngineUtils.h"
+#include "DrawDebugHelpers.h"
+#include "Components/PrimitiveComponent.h"
+#include "Components/SphereComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "PhysicsEngine/BodySetup.h"
 #include "EngineHelper.generated.h"
 
 UCLASS()
@@ -71,4 +79,5 @@ class TUBEUE_API UEngineHelper : public UObject {
 									  size_t index) -> TObjectPtr<AActor>;
 		static void setSpectatorCameraSpeed(APlayerController* playerController, float speed);
 		static void setKinematicTarget(UStaticMeshComponent* component, bool bState);
+		static void drawAllSimpleCollidersForActor(AActor *actor);
 };

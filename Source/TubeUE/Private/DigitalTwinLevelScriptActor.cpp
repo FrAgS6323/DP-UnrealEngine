@@ -44,7 +44,7 @@ void ADigitalTwinLevelScriptActor::interactWithActors(){
 
         if (Hit.GetActor() == this->tubeModel){
             //this->tubeModel->widgetComponent->SetVisibility(true);
-            this->tubeModel->setActive(true);
+            this->tubeModel->setActive(this->playerController, true);
             this->turtlebotModel->setActive(nullptr, false);
             UEngineHelper::setSpectatorCameraSpeed(this->playerController, ADigitalTwinLevelScriptActor::cameraSpeed);
         }
@@ -60,7 +60,7 @@ void ADigitalTwinLevelScriptActor::interactWithActors(){
         }
         else{
             //this->tubeModel->widgetComponent->SetVisibility(false);
-            this->tubeModel->setActive(false);
+            this->tubeModel->setActive(nullptr, false);
             this->turtlebotModel->setActive(nullptr, false);
             UEngineHelper::setSpectatorCameraSpeed(this->playerController, ADigitalTwinLevelScriptActor::cameraSpeed);
             UE_LOG(LogTemp, Warning, TEXT("No model active"));
