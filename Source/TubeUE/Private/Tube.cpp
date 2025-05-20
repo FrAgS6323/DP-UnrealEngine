@@ -40,8 +40,8 @@ ATube::ATube(){
         };
 #endif
 
-    this->webHandlerGet = MakeUnique<WebHandler>(TEXT("http://147.232.60.231:5001/tubeDataAPI"), WebHandler::eRequestType::GET);
-    this->webHandlerPost = MakeUnique<WebHandler>(TEXT("http://147.232.60.231:5001/tubeSend"), WebHandler::eRequestType::POST);
+    this->webHandlerGet = MakeShared<WebHandler>(TEXT("http://147.232.60.231:5001/tubeDataAPI"), WebHandler::eRequestType::GET);
+    this->webHandlerPost = MakeShared<WebHandler>(TEXT("http://147.232.60.231:5001/tubeSend"), WebHandler::eRequestType::POST);
 }
 
 void ATube::BeginPlay(){
@@ -152,6 +152,7 @@ void ATube::funcForWebHandlerGet(FHttpRequestPtr request, FHttpResponsePtr respo
         if (this->responseObj->TryGetStringField("target", value)) LexTryParseString(this->desiredHeight, *value);
         if (this->responseObj->TryGetStringField("height", value)) {
             LexTryParseString(this->actualHeightViz, *value);
+            //UE_LOG(LogTemp, Warning, TEXT("VizHeight Response: %f"), this->actualHeightViz);
             if (this->actualHeightViz <= 8.0) this->actualHeightViz = 0.0;
         }
         if (this->responseObj->TryGetStringField("angle", value)) LexTryParseString(this->angle, *value);
@@ -652,12 +653,20 @@ void ATube::Tick(float DeltaTime){
             this->bChangeMode = false;
         }
 
-        this->onReqCompleteFunctorGet = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
+        this->onReqCompleteFunctorGet =MakeShared<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>> ([this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
             this->funcForWebHandlerGet(request, response, connected);
-        };
-        this->webHandlerGet->initRequest();
-        this->webHandlerGet->setFunctorOnProcessRequestComplete(this, MakeShared<TFunction<void(FHttpRequestPtr, FHttpResponsePtr, bool)>>(MoveTemp(this->onReqCompleteFunctorGet)));
-        this->webHandlerGet->sendRequest();
+
+            this->webHandlerGet->initRequest();
+            this->webHandlerGet->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorGet);
+            this->webHandlerGet->sendRequest();
+        });
+
+        if (!this->bFirstReqGETSent) {
+            this->webHandlerGet->initRequest();
+            this->webHandlerGet->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorGet);
+            this->webHandlerGet->sendRequest();
+            this->bFirstReqGETSent = true;
+        }
         
         //double testHeight = 0.0,
                //testAngle = -45.0;
@@ -704,11 +713,11 @@ void ATube::Tick(float DeltaTime){
             this->pidControllerServo->reset();
             this->bChangeMode = false;
         }
-        this->onReqCompleteFunctorGet = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
+        this->onReqCompleteFunctorGet = MakeShared<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>>([this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
             this->funcForWebHandlerGet(request, response, connected);
-        };
+        });
         this->webHandlerGet->initRequest();
-        this->webHandlerGet->setFunctorOnProcessRequestComplete(this, MakeShared<TFunction<void(FHttpRequestPtr, FHttpResponsePtr, bool)>>(MoveTemp(this->onReqCompleteFunctorGet)));
+        this->webHandlerGet->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorGet);
         this->webHandlerGet->sendRequest();
         
         this->performRaycast();

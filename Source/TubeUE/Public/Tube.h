@@ -36,7 +36,8 @@ class TUBEUE_API ATube : public AActor{
 			 bCoordsViz = false,
 			 bIsActive = false,
 			 bChangeMode = false,
-			 bShowColliders = false;
+			 bShowColliders = false,
+			 bFirstReqGETSent = false;
 		int xBallPos = 0, 
 			yBallPos = 0,
 			xBallPosViz = 0,
@@ -78,7 +79,7 @@ class TUBEUE_API ATube : public AActor{
 		TSharedPtr<FJsonObject> responseObj;
 		TUniquePtr<UPID> pidControllerBall, 
 						 pidControllerServo;
-		TUniquePtr<WebHandler> webHandlerGet, 
+		TSharedPtr<WebHandler> webHandlerGet, 
 							   webHandlerPost;
 		UCheckBox *pidCheckBox,
 				  *pidCheckBoxSimIRL;
@@ -88,8 +89,8 @@ class TUBEUE_API ATube : public AActor{
 			       *currentAngleVarSimIRL,
 			       *desiredHeightVarSimIRL,
 			       *desiredAngleVarSimIRL;
-		TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> onReqCompleteFunctorGet;
-		TSharedPtr<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>> onReqCompleteFunctorPost;
+		//TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> onReqCompleteFunctorGet;
+		TSharedPtr<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>> onReqCompleteFunctorGet, onReqCompleteFunctorPost;
 		void initialize();
 		auto getDistance() -> double;
 		auto getRegulationHeight() -> double;

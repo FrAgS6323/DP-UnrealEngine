@@ -57,16 +57,17 @@ bool WebHandler::serializeJSON(FcasePost &postData, const FString& key, FString 
 }
 
 void WebHandler::initRequest(){
+	this->requestStartTime = FPlatformTime::Seconds();
 	this->request = FHttpModule::Get().CreateRequest();
+	this->request->SetHeader(TEXT("Cache-Control"), TEXT("no-cache"));
+	this->request->SetHeader(TEXT("Pragma"), TEXT("no-cache"));
+	this->request->SetHeader(TEXT("Expires"), TEXT("0"));
 	this->request->SetURL(url);
 	this->request->SetVerb(WebHandler::eRequestType::GET == this->requestType ? "GET" : "POST");
 }
 
 void WebHandler::initRequest(const FString& key){
-	this->request = FHttpModule::Get().CreateRequest();
-	this->request->SetURL(url);
-	this->request->SetVerb(WebHandler::eRequestType::GET == this->requestType ? "GET" : "POST");
-
+	this->initRequest();
 
 	if (WebHandler::eRequestType::POST == this->requestType) {
 		//UE_LOG(LogTemp, Warning, TEXT("Created POST request: %p"), this->request.Get());
@@ -89,10 +90,7 @@ void WebHandler::initRequest(const FString& key){
 }
 
 void WebHandler::initRequest(const TArray<FString> &keys) {
-	this->request = FHttpModule::Get().CreateRequest();
-	this->request->SetURL(url);
-	this->request->SetVerb(WebHandler::eRequestType::GET == this->requestType ? "GET" : "POST");
-	this->requestQueue.Enqueue(this->request);
+	this->initRequest();
 
 	if (WebHandler::eRequestType::POST == this->requestType) {
 		//UE_LOG(LogTemp, Warning, TEXT("Created POST request: %p"), this->request.Get());
@@ -115,14 +113,55 @@ void WebHandler::initRequest(const TArray<FString> &keys) {
 }
 
 void WebHandler::setFunctorOnProcessRequestComplete(AActor *actor, TSharedPtr<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>> functorPtr){
-	this->request->OnProcessRequestComplete().BindLambda([functorPtr](FHttpRequestPtr request, FHttpResponsePtr response, bool connected){
-		if(functorPtr.IsValid())
-			(*functorPtr)(request, response, connected);
+	TSharedPtr<WebHandler> thisShared = AsShared();
+	TWeakPtr<WebHandler> weakThis = thisShared;
+
+	this->request->OnProcessRequestComplete().BindLambda([weakThis, functorPtr](FHttpRequestPtr request, FHttpResponsePtr response, bool connected){
+		TSharedPtr<WebHandler> _this = weakThis.Pin();
+		if (!_this.IsValid())
+			return;
+
+		if (!functorPtr.IsValid())
+			return;
+		
+		(*functorPtr)(request, response, connected);
+
+		if (response.IsValid()) {
+			double durationMs = (FPlatformTime::Seconds() - _this->requestStartTime) * 1000.0f;
+			UE_LOG(LogTemp, Log, TEXT("Request took %.6f ms"), durationMs);
+
+
+			_this->requestDurations.Add(durationMs);
+			_this->requestCount++;
+
+			if (_this->requestCount >= _this->maxRequestCount) {
+				float sum = 0.0f;
+
+				for (float time : _this->requestDurations)
+					sum += time;
+
+				float avg = sum / _this->requestDurations.Num();
+				UE_LOG(LogTemp, Log, TEXT("Avg of %d requests: %.3f ms"), _this->maxRequestCount, avg);
+
+				_this->requestDurations.Empty();
+				_this->requestCount = 0;
+			}
+		}
+		else{
+			UE_LOG(LogTemp, Warning, TEXT("Response not valid!"));
+		}
 	});
 }
 
 void WebHandler::sendRequest(){
 	this->request->ProcessRequest();
+}
+
+void WebHandler::cancelRequest(){
+	if (this->request.IsValid()) {
+		this->request->CancelRequest();
+		UE_LOG(LogTemp, Warning, TEXT("Request canceled!"));
+	}
 }
 
 WebHandler::~WebHandler(){}

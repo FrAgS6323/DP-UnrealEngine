@@ -48,8 +48,8 @@ ACase::ACase() {
 	this->sCaseMesh->SetMobility(EComponentMobility::Movable);
 	this->sCaseMesh->SetMassOverrideInKg(NAME_None, 10.0f, true);
 
-	this->webHandlerGet = MakeUnique<WebHandler>(TEXT("http://147.232.60.231:5001/kuforDataAPI"), WebHandler::eRequestType::GET);
-	this->webHandlerPost = MakeUnique<WebHandler>(TEXT("http://147.232.60.231:5001/kuforSend"), WebHandler::eRequestType::POST);
+	this->webHandlerGet = MakeShared<WebHandler>(TEXT("http://147.232.60.231:5001/kuforDataAPI"), WebHandler::eRequestType::GET);
+	this->webHandlerPost = MakeShared<WebHandler>(TEXT("http://147.232.60.231:5001/kuforSend"), WebHandler::eRequestType::POST);
 }
 
 void ACase::funcForWebHandlerGet(FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
@@ -408,13 +408,20 @@ void ACase::Tick(float DeltaTime){
 	Super::Tick(DeltaTime);
 
 	if (ERunningModesCase::VISUALIZATION == this->mode) {
-		this->onReqCompleteFunctorGet = [this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
+		this->onReqCompleteFunctorGet = MakeShared<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>>([this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
 			this->funcForWebHandlerGet(request, response, connected);
-		};
 
-		this->webHandlerGet->initRequest();
-		this->webHandlerGet->setFunctorOnProcessRequestComplete(this, MakeShared<TFunction<void(FHttpRequestPtr, FHttpResponsePtr, bool)>>(MoveTemp(this->onReqCompleteFunctorGet)));
-		this->webHandlerGet->sendRequest();
+			this->webHandlerGet->initRequest();
+			this->webHandlerGet->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorGet);
+			this->webHandlerGet->sendRequest();
+		});
+		
+		if (!this->bFirstReqGETSent) {
+			this->webHandlerGet->initRequest();
+			this->webHandlerGet->setFunctorOnProcessRequestComplete(this, this->onReqCompleteFunctorGet);
+			this->webHandlerGet->sendRequest();
+			this->bFirstReqGETSent = true;
+		}
 
 		this->onReqCompleteFunctorPost = MakeShared<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>>([this](FHttpRequestPtr request, FHttpResponsePtr response, bool connected) {
 			this->funcForWebHandlerPost(request, response, connected);
@@ -540,6 +547,7 @@ void ACase::Tick(float DeltaTime){
 			this->webHandlerPost->sendRequest();
 			this->vizInputActualStates.displayDownNum = this->vizSetDisplayDownNum;
 		}
+		//if (this->modeBeforeSwitch != this->mode) this->modeBeforeSwitch = this->mode;
 	}else{
 		this->numToSegments(this->sevenSegOneNum, this->sevenSegOne);
 		this->numToSegments(this->sevenSegTwoNum, this->sevenSegTwo);
@@ -553,4 +561,12 @@ void ACase::Tick(float DeltaTime){
 	this->renderMaterials();
 	if (this->playerController && this->playerController->WasInputKeyJustReleased(EKeys::U)) this->bShowColliders = !this->bShowColliders;
 	if (this->bShowColliders) UEngineHelper::drawAllSimpleCollidersForActor(this);
+
+#if 0
+	if (this->modeBeforeSwitch != this->mode) {
+		if (this->webHandlerGet.IsValid()) this->webHandlerGet->cancelRequest();
+		if (this->webHandlerPost.IsValid()) this->webHandlerPost->cancelRequest();
+		this->modeBeforeSwitch = this->mode;
+	}
+#endif
 }

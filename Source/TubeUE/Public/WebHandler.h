@@ -31,7 +31,7 @@ struct FcasePost {
 	UPROPERTY() int A2;
 };
 
-class TUBEUE_API WebHandler{
+class TUBEUE_API WebHandler : public TSharedFromThis<WebHandler>{
 	public:
 		enum class eRequestType { GET, POST };
 		//enum class eModelType { TUBE, CASE };
@@ -50,15 +50,19 @@ class TUBEUE_API WebHandler{
 		void initRequest(const TArray<FString> &keys);
 		void setFunctorOnProcessRequestComplete(AActor *actor, TSharedPtr<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>> functorPtr);
 		void sendRequest();
+		void cancelRequest();
 		~WebHandler();
 	private:
 		const FString url;
 		WebHandler::eRequestType requestType;
 		FHttpRequestPtr request;
-		TQueue<FHttpRequestPtr> requestQueue;
 		FHttpResponsePtr response;
 		FtubePost dataTube;
 		FcasePost dataCase;	
+		double requestStartTime;
+		TArray<float> requestDurations;
+		int requestCount = 0;
+		const int maxRequestCount = 100;
 		bool serializeJSON(FtubePost &postData, const TArray<FString> &keys, FString &jsonStr);
 		bool serializeJSON(FcasePost& postData, const FString& key, FString& jsonStr);
 };

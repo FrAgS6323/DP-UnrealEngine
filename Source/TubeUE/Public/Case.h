@@ -46,6 +46,7 @@ class TUBEUE_API ACase : public AActor
 				displayDownNum = 0;
 		}VizRestActualStates;
 		bool bIsActive = false,
+			 bFirstReqGETSent = false,
 			 bShowColliders = false;
 		int32 displayUpNum, displayDownNum;
 		static constexpr size_t displaySize = 5;
@@ -69,12 +70,14 @@ class TUBEUE_API ACase : public AActor
 		TArray<TArray<ACase::MatElementData>> displayUp, displayDown;
 		APlayerController *playerController;
 		TSharedPtr<FJsonObject> responseObj;
-		TUniquePtr<WebHandler> webHandlerGet, 
+		TSharedPtr<WebHandler> webHandlerGet, 
 							   webHandlerPost;
 		ACase::VizInputActualStates vizInputActualStates;
 		ACase::VizRestActualStates vizRestActualStates;
-		TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> onReqCompleteFunctorGet;
-		TSharedPtr<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>> onReqCompleteFunctorPost;
+		//TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)> onReqCompleteFunctorGet;
+		TSharedPtr<TFunction<void(FHttpRequestPtr request, FHttpResponsePtr response, bool connected)>> onReqCompleteFunctorGet, 
+																									    onReqCompleteFunctorPost;
+		//ERunningModesCase modeBeforeSwitch;
 		void initSegArray(TArray<ACase::MatElementData>& segArray, 
 						  const TArray<int>& slots, 
 						  const TCHAR* offMatPath,
